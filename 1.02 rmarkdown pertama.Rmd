@@ -1,0 +1,82 @@
+# Latihan R di BBTNBKDS
+
+## 2026-06-29 s/d 2026-06-30
+
+## 1.02 Markdown pertama
+
+Ini adalah dokumen R Markdown. Markdown adalah sintaks pemformatan sederhana untuk menulis manfaat dokumen HTML, PDF, dan MS Word. Untuk detail lebih lanjut tentang penggunaan R Markdown lihat <http://rmarkdown.rstudio.com>
+
+Saat Anda mengeklik tombol **Knit** (Rajut), sebuah dokumen akan dibuat yang menyertakan konten serta keluaran dari setiap potongan kode R yang disematkan di dalam dokumen.
+
+Anda dapat menyematkan potongan kode R seperti ini:
+
+```{r katak}
+
+# bikin objek namanya katak dgn 20 observasi
+
+katak = c(1.1, 1.3, 1.7, 1.8, 1.9, 
+          2.1, 2.3, 2.4, 2.5, 2.8, 
+          3.1, 3.3, 3.6, 3.7, 3.9, 
+          4.1, 4.5, 4.8, 5.1, 5.3)
+
+berudu = 2 * katak
+berudu = rnorm(n = 20, mean = 2 * katak, sd = 0.5)
+
+```
+
+Ini memisahkan teks dari kode:
+
+```{r}
+
+# kata biasa
+
+# di dalam code kalau mau bikin keterangan harus pakai "#" hkjhkhkjghkjhkhkhkjhkjhkjhkjhkjhjkkhksh cksjdlhf klsad 
+
+
+```
+
+Anda dapat mengubah tampilan RStudio menggunakan Pengaturan (Edit -> Settings)
+
+# Ini adalah judul
+
+### ...yang sedikit lebih kecil
+
+###### Aduh, terlalu kecil
+
+##### Ahh, pas!
+
+Anda juga dapat bikin plot, misalnya:
+
+```{r plot, echo=FALSE}
+
+# Perhatikan bahwa parameter `echo = FALSE` (echo = gema) ditambahkan ke potongan kode untuk mencegah pencetakan kode R yang menghasilkan plot.
+
+plot(katak ~ berudu)
+hist(katak)
+# plot(y ~ x)
+
+```
+
+```{r plot2, echo=TRUE}
+
+# Sekarang `echo = TRUE` (default), sehingga kode yang menghasilkan plot dapat dilihat
+
+plot(katak ~ berudu)
+
+```
+
+Perhatikan bahwa kami menamai potongan kode "plot2". Kami tidak perlu menamainya apa pun, tetapi kami tidak dapat menggunakan nama yang sama lebih dari satu kali dalam satu dokumen. (Penamaan dapat membantu untuk dengan mudah beralih dari satu jenis kode ke kode lainnya)
+
+Dan hal-hal lain:
+
+```{r hal2 lain}
+
+# menghitung korelasi antara katak dan berudu:
+cor(katak, berudu)
+
+# signifikansi statistik dari korelasi::
+cor.test(katak, berudu)
+
+```
+
+Knit untuk bikin dokumen

@@ -1,0 +1,295 @@
+
+# Latihan R di BBTNBKDS
+
+## 2026-06-29 s/d 2026-06-30
+
+## 1.03 Perintah dasar
+
+## Perhitungan dasar 
+
+Basic math:
+```{r}
+
+3 + 2
+4 * 5
+5 - 3
+
+```
+
+Spaces don't affect functionality (in most contexts).
+
+```{r}
+
+4/5
+4 / 5
+4           /              5
+
+```
+
+If you haven't completed a line, R will ask you to finish it.
+
+```{r, eval = FALSE}
+
+5 + 6 + 89 - 4 +
+# finish the command on the next line, 
+# or use ESC to exit
+
+  # text or lines preceded by '#' are not executed
+
+# lines not preceded by '#' are executed  #oops 
+     
+```
+
+Use up and down arrows to move around in your history.
+
+R displays big and small #s using normal scientific notation.
+
+```{r}
+
+456000000000000000
+5 / 298657635
+
+```
+
+## Fungsi aritmatika 
+
+```{r}
+
+sqrt(9)
+4 ^ 3
+abs(-945.2368)
+log(8)
+
+# you can always use ? to get help
+?log
+
+# or get an example
+example(log)
+example(seq)
+
+```
+
+Common arithmetic functions:
+
+ ----------------
+abs(x)	                 absolute value
+sqrt(x)                  square root
+factorial (x)            x!
+ceiling(x)	             ceiling(3.475) is 4
+floor(x)	               floor(3.475) is 3
+trunc(x)	               trunc(5.99) is 5
+round(x, digits = n)     round(3.475, digits  2) is 3.48
+signif(x, digits = n)	   signif(3.475, digits = 2) is 3.5
+cos(x), sin(x), tan(x)   basic trig
+log(x)	                 natural logarithm
+log10(x)	               common logarithm
+exp(x)	                 e^x
+ ---------------
+
+
+## Menetapkan variabel 
+
+Use '<-' to assign anything you want to a variable.
+
+```{r}
+
+x <- 5
+x
+
+z <- "semua tak sama"
+z
+
+# mind the space!
+y <- 67
+y
+y < - 7
+y
+
+# you can then use the variable to represent that item(s) in a formula
+x * 8
+y <- sqrt(4)
+
+x * y
+x == y
+
+saya_bisa_bikin_nama_panjang <- 67
+
+```
+
+Important things to note regarding variables:
+    case sensitive (g != G)
+    should not begin with numbers or symbols (5x, %cover)
+    should not contain spaces (fun_games not fun games)
+    make as short and intuitive as possible
+
+Combine 'c()' values into a list (aka vector)
+
+```{r}
+
+x <- c(5, 7, 8, 10)
+x
+# as before, the variable represents its contents in a formula
+x * 2
+
+```
+
+
+## Mendapatkan bantuan
+
+Option 1:"?function"
+
+```{r}
+
+?lm
+?plot
+# R will tell you if you look for something that doesn't exist:
+?gr
+
+```
+
+Option 2:"help()"
+
+```{r}
+
+help(lm)
+?help
+
+```
+
+option 3: "help.search("keyword")
+
+```{r}
+
+help.search("mle")
+# the "??" shortcut gives you the same thing:
+??"mle"
+
+```
+
+## Masukkan data 
+
+Usually we want to read data directly in from a file. R can read in various file types. *.csv is the most commonly used one. These all do the same thing:
+
+```{r}
+
+my.data <- read.table(file = "1.04 temperatures.csv", 
+                      header = TRUE, sep = ",")
+my.data
+
+my.data <- read.csv(file = "/Users/ajmarsha/Dropbox (Personal)/andy/teaching/BTNGP R course/1.04 temperatures.csv", header = TRUE)
+my.data
+
+my.data <- read.delim(file = "1.04 temperatures.csv", sep = ",")
+my.data
+
+my.data <- 7
+
+```
+
+For `read.table()`, you need to specify the separator (using "sep = "); the default separator is a space. You can drop this if you use `read.csv()`. If you use `read.delim()`, you can drop the "header = TRUE" command (this tells R that the first row is your column headings)
+
+Common errors that thwart read commands
+  - spaces in file names (e.g., 'orang.density' not 'orang density')
+  - the number of variable names in row 1 != the number of columns 
+          (recall != is ≠)
+  - blank spaces where values are missing (use "NA")
+  
+```{r, eval = FALSE}
+
+y <- read.csv("FILE_NAME",
+              na.strings = c("","7","?"))  
+
+```
+
+
+## Pemeriksaan cepat ntk data yg dimasukkan 
+
+It is good to get into the habit of frequently checking data frames you have imported or created.
+
+```{r}
+
+temps <- read.csv("1.04 temperatures.csv", header = TRUE)
+temps
+
+```
+
+`dim()` gives you the dataframe's dimensions, listed as rows , columns
+
+```{r}
+
+dim(temps)
+
+```
+
+`str()` tells you the dataframe structure. ***good practice!***
+
+```{r}
+
+str(temps)
+
+```
+
+`names()` gives names of components in an object.
+
+```{r}
+
+names(temps)
+
+```
+
+`head()` and `tail()` give the first and last parts of dataframe.
+
+```{r}
+
+head(temps)
+tail(temps)
+
+```
+
+Selecting subsets of data.
+
+```{r}
+
+#Use "$" to select subsets of data. The text before the "$" is the dataframe, the text after it is the variable name.
+
+temps$yr
+mean(temps$yr)
+
+plot(temps$yr ~ temps$rain)
+
+```
+
+## Pengeluaran data 
+
+Create a datastring: 2000 draws from a normal distribution with mean = 5, sd = 1
+
+```{r}
+
+my.dataset <- rnorm(n = 2000, 
+                    mean = 5, sd = 1)
+my.dataset
+
+```
+
+Use `write()` to write the data to a file. You can either provide the full path to where you want to save the file or simply name the file and it will be put in your working directory (wd).
+
+```{r}
+
+# specify full path
+write(my.dataset, "/Users/ajmarsha/Desktop/my.dataset.csv")
+write(my.dataset, "/Users/ajmarsha/Desktop/my.dataset.csv", sep = ",")
+write(my.dataset, "/Users/ajmarsha/Desktop/my.dataset.txt")
+
+# provide file name only, will be saved to wd
+write(my.dataset, "my.dataset.txt")
+
+# to check the wd
+getwd()
+
+# by default, the wd (usually) is set to the folder that holds your script file; to change, use `setwd()`. As with many things in R, it is best to give R explicit instructions rather than guess at the defaults (which might change with package updates, etc.)
+
+setwd("/Users/ajmarsha/Desktop")
+write(my.dataset, "my.dataset.txt")
+
+```
+
