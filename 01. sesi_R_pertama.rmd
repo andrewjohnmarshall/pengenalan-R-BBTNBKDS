@@ -1,9 +1,7 @@
+
 # Latihan R di BBTNBKDS / R Training at BBTNBKDS
 ## 2026-06-29 s/d 2026-06
-## disampikan oleh Andy Marshall, Universitas Michigan / delivered by Andy Marshall, University of Michigan
-
-
-# 1.01 Sesi R Pertama / First R Session
+## disampikan oleh Andy Marshall, Universitas Michigan 
 
 Selamat datang di sesi R pertama Anda!
 
@@ -16,10 +14,12 @@ Ini adalah dokumen Markdown. Markdown adalah sintaks pemformatan sederhana untuk
 # Proyek di Posit Cloud / Projects in Posit Cloud
 
 - Saat Anda membuka proyek, Posit Cloud akan membuat salinan pribadi untuk Anda.
+- Bikin copy permanen proyek ke workspace sendiri
 - Nama file berwarna merah berarti ada perubahan yang belum disimpan.
 - Kita juga akan melihat cara mengunduh proyek dari Posit Cloud.
 
 > - when you open, it creates a personal copy
+> - make a permanent copy of the project to your workspace
 > - red file name = unsaved changes
 > - downloading projects from Posit Cloud
 
@@ -78,7 +78,7 @@ Ini adalah teks biasa.
 
 5 +  7 # this lines adds two numbers
 
-all lines in a code chunk not preceded by '#' are executed  #oops 
+#all lines in a code chunk not preceded by '#' are executed  #oops 
 
 ```
 
@@ -213,7 +213,7 @@ plot(Volume ~ Girth,
       xlab = "Tree Girth (in)", 
       ylab = "Tree Volume (cu ft)",
       las  = 1,    # I'm a comment!
-      bty  = "n", # Me, too.
+      bty  = "n",  # Me, too.
          # the next line sets the plotting character 
       pch = 16,
       cex = Height/50,
@@ -225,4 +225,5 @@ plot(Volume ~ Girth,
 # Melakukan Knit / Knitting
 
 Saat Anda mengeklik tombol **Knit** atau **Rajut**, sebuah dokumen akan dibuat yang menyertakan konten serta keluaran dari setiap potongan kode R yang disematkan di dalam dokumen.
-````
+
+> When you click the **Knit** or **Knit** button, a document will be created that includes the contents and output of each piece of R code embedded within the document.
