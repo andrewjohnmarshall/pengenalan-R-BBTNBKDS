@@ -1,0 +1,791 @@
+#' 
+#' # Latihan R di BBTNBKDS / R Training at BBTNBKDS
+#' ## 2026-06-29 s/d 2026-06
+#' ## disampikan oleh Andy Marshall, Universitas Michigan / delivered by Andy Marshall, University of Michigan
+#' 
+#' # Merapikan data / Wrangling data
+#' 
+#' # Mendefinisikan tidy data / defining tidy data
+#' 
+#' ## struktur data / data structure
+#' 
+#' Sebagian besar dataset adalah data frame yang terdiri dari baris dan kolom. Kolom hampir selalu memiliki label, dan baris sering kali juga memiliki label. Ada banyak cara untuk menyusun data dasar yang sama.
+#' 
+#' > Most data sets are data frames made up of rows and columns. The columns are almost always labeled and the rows are often labeled. There are many ways to structure the same underlying data.
+#' 
+## --------------------------------------------------
+
+preg <- read.csv("preg.csv")
+preg
+
+preg2 <- read.csv("preg2.csv")
+preg2
+
+
+#' 
+#' Datanya sama, tetapi tata letaknya berbeda. Kosakata kita tentang baris dan kolom belum cukup kaya untuk menjelaskan mengapa kedua tabel tersebut merepresentasikan data yang sama. Selain tampilan, kita juga memerlukan cara untuk menjelaskan semantik dasar, atau makna, dari nilai-nilai yang ditampilkan dalam tabel.
+#' 
+#' > The data are the same, but the layout is different. Our vocabulary of rows and columns is  not rich enough to describe why the two tables represent the same data. In addition to appearance, we need a way to describe the underlying semantics, or meaning, of the values displayed in the table.
+#' 
+#' Catatan: dua dataset di atas ditampilkan dalam format normal yang biasa kita lihat di base R. Karena kita menggunakan tidyverse, demi konsistensi kita akan bekerja dengan data ini sebagai tibble. Kita bisa melakukan ini dengan setidaknya dua cara.
+#' 
+#' > Note: the above two data sets displayed in the normal format we are used to in base R. Since we are using the tidyverse, for consistency we will work with these as tibbles. We can achieve this in (at least) two ways.
+#' 
+#' Pertama, kita bisa mengimpor dataset langsung sebagai tibble menggunakan `as_tibble()`:
+#' 
+#' > First, we could import the data sets directly as tibbles, using `as_tibble()`:
+#' 
+## --------------------------------------------------
+
+library(tidyverse)
+preg <- as_tibble(read.csv("preg.csv"))
+preg
+
+
+#' 
+#' Sebagai alternatif, kita bisa mengubah klasifikasi data frame menjadi tibble setelah data diimpor.
+#' 
+#' > Alternatively, we could reclassify the data frames as tibbles once we have imported them.
+#' 
+## --------------------------------------------------
+
+preg2 <- read.csv("preg2.csv")
+preg2 # not a tibble
+
+preg2 <- as_tibble(preg2)
+preg2 # now a tibble
+
+
+#' 
+#' ## semantik data / data semantics
+#' 
+#' Sebuah dataset adalah kumpulan nilai, biasanya berupa angka jika kuantitatif, atau string jika kualitatif. Nilai-nilai disusun dalam dua cara. Setiap nilai termasuk ke dalam sebuah **variabel** dan sebuah **observasi**.
+#' 
+#' > A dataset is a collection of values, usually either numbers (if quantitative) or strings (if qualitative). Values are organised in two ways. Every value belongs to a **variable** and an **observation**.
+#' 
+#' Versi tidy dari data kehamilan terlihat seperti ini. Komentar menunjukkan apa yang dilakukan setiap baris; kita akan membahas makna kode ini lebih lanjut di bawah.
+#' 
+#' > A tidy version of the pregnancy data looks like this (the comments indicate what each line does, we'll discuss the meaning of the code more below):
+#' 
+## --------------------------------------------------
+
+preg3 <- preg %>%
+     # pivot_longer() reshapes the data from wide to long,
+     # it is moving 'treatmenta' and 'treatmentb' into
+     # a single column (named "treatment")
+     # and their values into the "n" column
+    pivot_longer(cols = treatmenta:treatmentb,
+                 names_to = "treatment",
+                 values_to = "n") %>%
+     # mutate() function with the str_remove() function
+     # removes the word "treatment" from the 'treatment column cells
+       # (actually, this is using mutate() to create a new variable
+       # based on the original 'treatment' column in which
+       # the text string "treatment" is removed - but because the
+       # new column 'treatment' has the same name as the original column,
+       # it simply overwrites it. If we had called it a different name,
+       # it would have appended the new column to the end of the dataset
+       # and kept the original one, too.)
+    mutate(treatment = str_remove(treatment, "treatment")) %>%
+     # arrange() orders the data by name and then treatment
+    arrange(name, treatment)
+preg3
+
+
+#' 
+#' Nilai, variabel, dan observasi sekarang lebih jelas. Dataset ini berisi 18 nilai yang merepresentasikan tiga variabel dan enam observasi. Variabelnya adalah:
+#' 
+#' > Values, variables and observations are now more clear. The data set contains 18 values representing three variables and six observations. The variables are:
+#' 
+#' 1. `name`, dengan tiga kemungkinan nilai: John, Mary, dan Jane.
+#' 2. `treatment`, dengan dua kemungkinan nilai: a dan b.
+#' 3. `n`, dengan lima atau enam nilai, tergantung bagaimana Anda memandang nilai hilang, yaitu `NA`.
+#' 
+#' > 1. `name`, with three possible values (John, Mary, and Jane).
+#' > 2. `treatment`, with two possible values (a and b).
+#' > 3. `n`, with five or six values depending on how you think of the missing value, NA
+#' 
+#' Desain eksperimen memberi tahu kita lebih banyak tentang struktur observasi. Dalam eksperimen ini, setiap kombinasi `name` dan `treatment` seharusnya diukur; ini disebut desain yang sepenuhnya tersilang atau *completely crossed design*. Desain eksperimen juga menentukan apakah nilai hilang dapat dihapus dengan aman atau tidak. Di sini, nilai hilang merepresentasikan observasi yang seharusnya dilakukan tetapi tidak dilakukan, jadi penting untuk mempertahankannya. Nilai hilang struktural, yaitu nilai yang merepresentasikan pengukuran yang memang tidak mungkin dilakukan, dapat dihapus dengan aman. Kita akan membahas ini lebih lanjut nanti.
+#' 
+#' > The experimental design tells us more about the structure of the observations. In this experiment, every combination of `name` and `treatment` was to be measured, a completely crossed design. The experimental design also determines whether or not missing values can be safely dropped. Here, the missing value represents an observation that should have been made, but wasn't, so it's important to keep it. Structural missing values, which represent measurements that can't be made can be safely removed (more on this later).
+#' 
+#' ## struktur tidy data / tidy data structure
+#' 
+#' 1. Setiap variabel membentuk satu kolom.
+#' 2. Setiap observasi membentuk satu baris.
+#' 3. Setiap nilai memiliki satu sel.
+#' 
+#' > 1.  Each variable forms a column.
+#' > 2.  Each observation forms a row.
+#' > 3.  Each value has a cell
+#' 
+#' Berikut contoh kedua. Data yang sama disusun dalam empat cara berbeda. Setiap dataset menunjukkan nilai yang sama dari empat variabel: *country*, *year*, *population*, dan *cases*:
+#' 
+#' > Here is a second example. The same data are organised in four different ways. Each dataset shows the same values of four variables *country*, *year*, *population*, and *cases*:
+#' 
+## --------------------------------------------------
+
+table1
+table2
+table3
+
+
+#' 
+#' Di sini informasinya tersebar di dua tibble.
+#' 
+#' > Here the information is spread across two tibbles
+#' 
+## --------------------------------------------------
+
+table4a  # cases
+table4b  # population
+
+
+#' 
+#' Semuanya adalah representasi dari data dasar yang sama, tetapi tidak semuanya sama mudah digunakan. Dalam contoh ini, hanya `table1` yang tidy. Itu adalah satu-satunya representasi di mana setiap kolom adalah sebuah variabel.
+#' 
+#' > All are representations of the same underlying data, but not equally easy to use. In this example, only `table1` is tidy. It's the only representation where each column is a variable.
+#' 
+#' `{dplyr}`, `{ggplot2}`, dan semua package lain dalam `{tidyverse}` dirancang untuk bekerja dengan tidy data.
+#' 
+#' > {dplyr}, {ggplot2}, and all other the packages in the {tidyverse} are designed to work with tidy data.
+#' 
+#' # Merapikan dataset yang berantakan / Tidying messy datasets
+#' 
+#' Sayangnya, sebagian besar dataset nyata melanggar prinsip-prinsip tidy data. Kadang-kadang memang kita mendapatkan dataset yang bisa langsung dianalisis, tetapi itu pengecualian, bukan aturan. Untuk sebagian besar analisis nyata, proses merapikan data diperlukan. Kadang-kadang proses ini bisa memakan waktu sama lama dengan analisis itu sendiri, atau bahkan lebih lama!
+#' 
+#' > Unfortunately, most real datasets violate the precepts of tidy data. While occasionally you do get a dataset that you can start analyzing immediately, this is the exception, not the rule. Tidying required for most real analyses. Sometimes it can take as long as the analysis itself, or longer!
+#' 
+#' Langkah pertama selalu mencari tahu apa variabelnya dan apa observasinya.
+#' 
+#' > The first step is always to figure out what the variables and observations are.
+#' 
+#' Langkah kedua sering kali adalah menyelesaikan salah satu dari dua masalah umum:
+#' 
+#' > The second step is often to resolve one of two common problems:
+#' 
+#' 1. Nama kolom bukan nama variabel, melainkan nilai dari sebuah variabel.
+#' 2. Satu observasi mungkin tersebar di beberapa baris.
+#' 
+#' > 1. Column names are not names of variables, but values of a variable.
+#' > 2. One observation might be scattered across multiple rows.
+#' 
+#' `{tidyr}` dapat memperbaiki masalah-masalah ini dengan `pivot_longer()` dan `pivot_wider()`.
+#' 
+#' > {tidyr} can fix these problems, with `pivot_longer()` and `pivot_wider()`.
+#' 
+#' ## `pivot_longer()` / `pivot_longer()`
+#' 
+#' Masalah umum adalah dataset di mana beberapa nama kolom bukan nama variabel, melainkan nilai dari sebuah variabel. Contohnya:
+#' 
+#' > A common problem is a dataset where some of the column names are not names of variables, but values of a variable. e.g.,:
+#' 
+## --------------------------------------------------
+
+table4a
+
+
+#' 
+#' Nama kolom `1991` dan `2000` merepresentasikan nilai dari variabel `year`, dan setiap baris merepresentasikan dua observasi, bukan satu.
+#' 
+#' > The column names `1991` and `2000` represent values of the `year` variable, and each row represents two observations, not one.
+#' 
+#' Untuk merapikan dataset seperti ini, kita perlu membuat variabel baru, yaitu kolom baru bernama `year`, dan meletakkan nilai data dalam kolom yang menunjukkan apa sebenarnya data tersebut. Di sini datanya adalah jumlah kasus, jadi kita akan menamai kolom baru itu `cases`. Proses ini akan membuat dataset menjadi lebih panjang, sehingga nama fungsinya cukup intuitif: `pivot_longer()`.
+#' 
+#' > To tidy a data set like this, we need to create a new variable (column) called `year` and place the data values in a column that indicates what the data actually are. Here, they are numbers of cases, so we will call the new column `cases`. This process will make the data set longer, thus the intuitively-named `pivot_longer()`:
+#' 
+## --------------------------------------------------
+
+table4a %>%
+    pivot_longer(cols = c("1999", "2000"),
+                 names_to = "year",
+                 values_to = "cases")
+
+
+#' 
+#' Kolom lama — yaitu struktur data lama — hilang, tetapi informasinya tetap tersimpan. Bagaimana kode ini bekerja?
+#' 
+#' > (The old columns -the old data structure- are lost, but the information is still saved.) How does this code work?
+#' 
+#' Kita ingin dataset baru memiliki tiga kolom: `country`, `year`, dan `cases`. Hanya kolom pertama yang sudah ada dalam dataset awal. Untuk merapikan data ini, kita perlu mencari tahu mana yang merupakan variabel dan mana yang merupakan nilai dalam dataset. `table4a` berisi data tentang jumlah kasus, kebetulan kasus tuberkulosis, per tahun di masing-masing dari tiga negara. Nilainya, dengan kata lain data dalam sel tabel, adalah jumlah kasus. Nilai-nilai ini diukur di setiap negara pada setiap tahun, sehingga `year` juga seharusnya menjadi satu kolom. Kode di atas mengambil tabel asli (`table4a`), memilih kolom yang perlu dirapikan (`1999`, `2000`), menetapkan variabel baru atau kolom baru yang akan menyimpan data dari kolom-kolom awal tersebut (`year`), lalu memberi nama kolom tempat nilai-nilai tersebut disimpan (`cases`). Perhatikan bahwa kita bisa memberi nama kolom baru apa pun yang kita inginkan:
+#' 
+#' > We want our new dataset to have three columns: `country`, `year`, and `cases`. Only the first of these are columns in the initial dataset. To tidy these data, we need to figure out what are the variables and what are the values in the dataset. `table4a` contains data on the number of cases (of tuberculosis, incidentally) per year in each of three countries. The values, in other words the data in the table cells, are numbers of cases. These values are measured in each country in each year, therefore `year` should be a single column, too. The code above takes the original table (`table4a`), chooses the columns to be tidied up (`1999`, `2000`), sets the new variable (column) that will hold the data from the initially-selected columns (`year`), and then names the column that the values should be stored in (`cases`). Note that we can label the new columns anything we want:
+#' 
+## --------------------------------------------------
+
+
+table4a %>%
+    pivot_longer(cols = c("1999", "2000"),
+                 names_to = "annum",
+                 values_to = "n_tb_cases")
+
+
+#' 
+#' ### giliran Anda / your turn
+#' 
+#' Q1. `table4b` berisi informasi tentang ukuran populasi di setiap negara pada dua tahun. Data ini tidak tidy. Mengapa?
+#' 
+#' > Q1. `table4b` contains information on population size in each country in each of two years. It is untidy. Why?
+#' 
+## --------------------------------------------------
+
+table4b
+
+
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' A1. Data ini tidak tidy karena kolom kedua dan ketiga bukan variabel, melainkan nilai dari sebuah variabel, yaitu `year`, sama seperti contoh di atas. Dengan kata lain, ada data di dalam nama kolom.
+#' 
+#' > A1. It is untidy because the second and third columns are not variables, but instead values of a variable, year (just like the example above). In other words, there are data in the column names.
+#' 
+#' Q2. Rapikan `table4b`.
+#' 
+#' > Q2. Tidy `table4b`
+#' 
+## --------------------------------------------------
+
+
+
+
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' A2.
+#' 
+#' > A2.
+#' 
+## --------------------------------------------------
+
+
+table4b %>%
+    pivot_longer(cols = c("1999", "2000"),
+                 names_to = "year",
+                 values_to = "population_size")
+
+
+#' 
+#' 
+#' ## fungsi join / join functions
+#' 
+#' Sering kali berguna untuk menyimpan data dalam beberapa tabel, bukan dalam satu tabel yang sangat besar. Inilah cara kerja basis data relasional, seperti Microsoft Access. Dalam contoh sederhana kita di sini, `table4a` dan `table4b` berisi data yang ingin kita gabungkan menjadi satu tibble. Pertama, kita simpan versi tidy dari kedua tabel tersebut:
+#' 
+#' > Often it can be useful to save data in multiple tables, rather than one massive table. This is the way relational databases, like Microsoft Access, work. In our toy example here, `table4a` and `table4b` contain data that we'd like to bring together into a single tibble. First, we save tidy versions of the two tables:
+#' 
+## --------------------------------------------------
+
+tidy4a <- table4a %>%
+    gather(`1999`, `2000`,
+           key = "year",
+           value = "cases")
+tidy4a
+
+tidy4b <- table4b %>%
+    gather(`1999`, `2000`,
+           key = "year",
+           value = "population")
+tidy4b
+
+
+#' 
+#' Lalu kita gabungkan menggunakan `left_join()`. Secara teknis ini adalah fungsi dari `{dplyr}`, bukan `{tidyr}`, tetapi masuk akal untuk dibahas di sini karena membantu kita merapikan data.
+#' 
+#' > And combine them using `left_join()` (which is technically a {dplyr}, not a {tidyr} function, but it makes sense here as it helps us tidy our data)
+#' 
+## --------------------------------------------------
+
+left_join(tidy4a, tidy4b)
+
+
+#' 
+#' `left_join(x, y)`: mengembalikan semua baris dari `x`, serta semua kolom dari `x` dan `y`. Baris di `x` yang tidak memiliki pasangan di `y` akan memiliki nilai `NA` pada kolom baru. Jika ada beberapa pasangan antara `x` dan `y`, semua kombinasi pasangan tersebut akan dikembalikan sebagai baris terpisah.
+#' 
+#' > left_join(x, y): return all rows from x, and all columns from x and y. Rows in x with no match in y will have NA values in the new columns. If there are multiple matches between x and y, all combinations of the matches are returned as separate rows.
+#' 
+#' `right_join(x, y)`: mengembalikan semua baris dari `y`, serta semua kolom dari `x` dan `y`. Baris di `y` yang tidak memiliki pasangan di `x` akan memiliki nilai `NA` pada kolom baru. Jika ada beberapa pasangan antara `x` dan `y`, semua kombinasi pasangan tersebut akan dikembalikan.
+#' 
+#' > right_join(x, y): return all rows from y, and all columns from x and y. Rows in y with no match in x will have NA values in the new columns. If there are multiple matches between x and y, all combinations of the matches are returned.
+#' 
+#' Ini adalah fungsi yang sangat kuat, dan salah satu fungsi yang hampir selalu saya gunakan ketika menganalisis data. Tetapi Anda harus berhati-hati, karena cukup mudah untuk secara tidak sengaja menggandakan ukuran dataset Anda. Misalnya, bayangkan kita melakukan ini:
+#' 
+#' > This is a very powerful function, and one I use virtually anytime I analyze data. But you have to be careful with it, as it is quite easy to mistakenly multiply the size of your dataset. For example, imagine we did this:
+#' 
+## --------------------------------------------------
+
+left_join(tidy4a, table4b)
+
+
+#' 
+#' Kita melihat bahwa tabel yang dihasilkan tidak tidy. Jadi, kita mungkin ingin merapikannya seperti di atas:
+#' 
+#' > We see the resultant table is not tidy. So, we might want to tidy it, as above:
+#' 
+## --------------------------------------------------
+
+left_join(tidy4a, table4b) %>%
+    pivot_longer(cols = c("1999", "2000"),
+                 names_to = "annum",
+                 values_to = "population_size")
+
+
+#' 
+#' Kita mungkin melihat sekilas bahwa `year` muncul dua kali, lalu langsung menghapus salah satu kolom. Jadi di sini kita menambahkan `select(-4)` untuk menghapus kolom keempat:
+#' 
+#' > We might look at this quickly and see that "year" appears twice, so simply remove the column. So here we append `select(-4)` to drop the fourth column:
+#' 
+## --------------------------------------------------
+
+left_join(tidy4a, table4b) %>%
+    pivot_longer(cols = c("1999", "2000"),
+                 names_to = "annum",
+                 values_to = "population_size") %>%
+     select(-4)
+
+
+
+#' 
+#' Dataset kita sekarang menjadi dua kali lebih panjang dari yang seharusnya, dan juga berisi kombinasi tahun dan ukuran populasi yang salah. Ini adalah contoh sederhana dan mungkin terasa dibuat-buat, tetapi hal seperti ini sangat mudah terjadi dalam situasi nyata. Karena lebih “ramah” daripada base R, fungsi-fungsi `{tidyverse}` sering memberi peringatan ketika kita hampir membuat kesalahan seperti ini. Misalnya, di sini saya mencoba melakukan `pivot_longer()` yang sama, tetapi menamai kolom baru saya `year`, yang sebenarnya masuk akal untuk dilakukan.
+#' 
+#' > Our dataset is now twice as long as it should be, and also contains incorrect combinations of year and population size. This is a simple example, and might seem contrived, but this is very easy to do in real-world situations. Being friendlier than {base} R, the {tidyverse} functions often warn us when we are about to make a mistake like this. For example, here I try to do the same `pivot_longer()`, but name my new column `year` (which is reasonable thing to do).
+#' 
+## --------------------------------------------------
+
+left_join(tidy4a, table4b) %>%
+    pivot_longer(cols = c("1999", "2000"),
+                 names_to = "year",
+                 values_to = "population_size")
+
+
+#' 
+#' Kita diberi tahu bahwa ada error, dan penjelasan singkat ditambahkan. Tetapi kita tidak akan selalu seberuntung itu, jadi kita perlu terus memeriksa saat bekerja dengan dataset untuk memastikan kita tidak memperkenalkan “baris hantu” yang tidak merepresentasikan data nyata.
+#' 
+#' > We are told we have made an error and a brief explanation is added. But we won't always be so lucky, so we need to constantly check as we work on datasets to ensure we haven't introduce ghost rows that don't represent real data.
+#' 
+#' ## `pivot_wider()` / `pivot_wider()`
+#' 
+#' `pivot_wider()` menyelesaikan masalah umum lainnya: satu observasi tersebar di beberapa baris. Misalnya, pada `table2`, satu observasi adalah sebuah negara pada satu tahun, tetapi setiap observasi tersebar di dua baris.
+#' 
+#' > `pivot_wider()` solves another fairly common problem: an observation is scattered across multiple rows. e.g., `table2`: an observation is a country in a year, but each observation is spread across two rows.
+#' 
+## --------------------------------------------------
+
+table2
+
+
+#' 
+#' Untuk memperbaikinya, kita perlu menentukan kolom yang sudah ada dalam dataset yang berisi informasi yang seharusnya menjadi variabel, yaitu kolom baru, dalam dataset yang sudah dirapikan. Di sini kolom tersebut adalah `type`. Kita juga perlu menentukan kolom yang berisi nilai data, yaitu `count`. Setelah itu jelas, kita bisa menggunakan `pivot_wider()`:
+#' 
+#' > To fix this, we need to define the existing columns in the dataset that contain information that should be variables (i.e., new columns) in the tidied dataset (here, 'type') and the column that contains the data values (here, 'count'). Once we've figured that out, we can use `pivot_wider()`:
+#' 
+## --------------------------------------------------
+
+table2 %>%
+    pivot_wider(names_from = type,
+                values_from = count)
+
+
+#' 
+#' Berikut contoh kedua. Kita membuat tibble sederhana bernama `df`, yang mencantumkan jumlah poin yang dicetak oleh dan melawan dua tim football dalam tiga pertandingan pertama mereka:
+#' 
+#' > Here is a second example. We make a simple tibble, called `df`, that lists the number of points scored for and against two football teams in their first three games:
+#' 
+## --------------------------------------------------
+
+df <- tribble(       # tribble() allows us to type in data to make a tibble
+                     # I only ever use it for classroom examples
+  ~team, ~game, ~for_against, ~points,
+  "Michigan",        "1",   "for",     30,
+  "Michigan",        "1",   "against",  3,
+  "Michigan",        "2",   "for",     35,
+  "Michigan",        "2",   "against",  7,
+  "Michigan",        "3",   "for",     31,
+  "Michigan",        "3",   "against",  6,
+  "Ohio State",      "1",   "for",     23,
+  "Ohio State",      "1",   "against",  3,
+  "Ohio State",      "2",   "for",     35,
+  "Ohio State",      "2",   "against",  7,
+  "Ohio State",      "3",   "for",     63,
+  "Ohio State",      "3",   "against",  3,
+)
+df
+
+
+#' 
+#' ### giliran Anda / your turn
+#' 
+#' Q. Rapikan `df`.
+#' 
+#' > Q. Tidy `df`.
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' A.
+#' 
+#' > A.
+#' 
+## --------------------------------------------------
+
+df %>%
+    pivot_wider(names_from = for_against,
+                values_from = points)
+
+
+#' 
+#' 
+#' Kita sudah belajar cara merapikan `table2` dan `table4`, tetapi belum `table3`. `table3` memiliki masalah yang berbeda.
+#' 
+#' > We've learned how to tidy `table2` and `table4`, but not `table3`. `table3` has a different problem.
+#' 
+## --------------------------------------------------
+
+table3
+
+
+#' 
+#' Kita memiliki satu kolom (`rate`) yang berisi dua variabel (`cases` dan `population`). Kita bisa memperbaikinya dengan `separate()`; `unite()` melakukan kebalikannya, yaitu membantu ketika satu variabel tersebar di beberapa kolom.
+#' 
+#' > We have one column (`rate`) that contains two variables (`cases` and `population`). We can fix this with `separate()`; `unite()` does the opposite, it helps when a single variable is spread across multiple columns.
+#' 
+#' 
+#' ## `separate_wider_x` / separate_wider_x
+#' 
+#' Perintah `separate_wider_x` memecah satu kolom menjadi beberapa kolom, dengan memisahkan di mana pun karakter pemisah muncul (`separate_wider_delim()`) atau pada posisi tertentu (`separate_wider_position()`).
+#' 
+#' > separate_wider_x commands pull apart one column into multiple columns, by splitting wherever a separator character appears (`separate_wider_delim()`) or at a certain position (`separate_wider_position()`).
+#' 
+#' Dalam `table3`, kolom `rate` berisi variabel `cases` dan `population`, dan kita perlu memecahnya menjadi dua variabel. `separate_wider_delim()` menerima nama kolom yang akan dipisahkan, delimiter atau pemisah yang digunakan untuk memecah isi sel, dan nama kolom hasil pemisahan:
+#' 
+#' > In `table3`, the `rate` column contains both `cases` and `population` variables, and we need to split it into two variables. `separate_wider_delim()` takes the name of the column to separate, the delimiter to separate cells on, and the names of the columns to separate into:
+#' 
+## --------------------------------------------------
+
+table3 %>%
+    separate_wider_delim(rate,
+                         delim = "/",
+                         names = c("cases", "population"))
+
+
+#' 
+#' 
+#' Tetapi lihat tipe kolomnya — `cases` dan `population` adalah kolom karakter (`<chr>`). Ini adalah perilaku default dalam `separate_wider_delim()`: ketika kolom dipisahkan, kolom hasilnya mewarisi tipe variabel dari kolom induknya. Jadi, karena `rate` adalah `<chr>`, kedua kolom hasil pemisahan juga menjadi `<chr>`. Di sini ini tidak terlalu berguna karena `cases` dan `population` adalah angka. Kita bisa menambahkan `type.convert()` untuk mengubahnya menjadi tipe yang benar.
+#' 
+#' > But see the column types - 'case' and 'population' are character columns (<chr>). This is the default behavior in `separate_wider_delim()`: when columns are split they inherit the type of variable from the parent column. So, because `rate` was <chr>, both of columns resulting from the split are <chr>. Here this is not very useful because `cases` and `population` are numbers. We can add the `type.convert()` to convert these to their correct type.
+#' 
+## --------------------------------------------------
+
+table3 %>%
+    separate_wider_delim(rate,
+                         delim = "/",
+                         names = c("cases", "population")) %>%
+     type.convert(as.is = TRUE)
+
+
+#' 
+#' 
+#' Anda juga bisa memisahkan kolom berdasarkan posisi tertentu menggunakan `separate_wider_position()`. Anda menuliskan kolom yang ingin dipisahkan, lalu daftar kolom tujuan dan berapa banyak posisi yang harus diambil masing-masing.
+#' 
+#' > You can also also split columns based at certain position using `separate_wider_position()` . You list the column you want to split up, and then a list of columns into which you want to split it and how many places each should take.
+#' 
+#' Misalnya, Anda bisa menggunakan susunan ini untuk memisahkan dua digit pertama dan dua digit terakhir dari setiap tahun.
+#' 
+#' > For example, you can use this arrangement to separate the first and last two digits of each year.
+#' 
+## --------------------------------------------------
+
+
+table3 %>%
+    separate_wider_position(year,
+                           c(century = 2, year = 2))
+
+
+#' 
+#' dan ini memisahkan tahun menjadi empat kolom, masing-masing selebar satu karakter.
+#' 
+#' > and this splits year into four columns, each one character wide
+#' 
+## --------------------------------------------------
+
+
+table3 %>%
+    separate_wider_position(year,
+                           c(thousands = 1, hundreds = 1,
+                             tens = 1, ones = 1))
+
+
+#' 
+#' 
+#' Contoh-contoh ini membuat data menjadi kurang tidy, tetapi perintahnya berguna dalam kasus lain. Lihat di bawah.
+#' 
+#' > These make these data less tidy, but the command is useful in other cases (see below).
+#' 
+#' Saya jarang menggunakan ini, tetapi demi kelengkapan saya akan mencatat bahwa `separate_longer_x` membagi satu baris menjadi beberapa baris, dengan memisahkan di mana pun karakter pemisah muncul (`separate_longer_delim()`) atau pada posisi tertentu (`separate_longer_position()`).
+#' 
+#' > I rarely use this, but for the sake of completeness I will note that separate_longer_x divides one row into multiple rows, by splitting wherever a separator character appears (`separate_longer_delim()`) or at a certain position (`separate_longer_position()`).
+#' 
+#' 
+#' ## `unite()` / unite()
+#' 
+#' `unite()` adalah kebalikan dari `separate_wider_x()`: fungsi ini menggabungkan beberapa kolom menjadi satu kolom. Misalnya, gunakan `unite()` untuk menggabungkan kembali kolom *century* dan *year* yang kita buat dalam contoh sebelumnya. `unite()` menerima sebuah data frame, nama variabel baru yang akan dibuat, dan sekumpulan kolom yang akan digabungkan:
+#' 
+#' > -`unite()` is inverse of `separate_wider_x()`: it combines multiple columns into a single column.  e.g., use `unite()` to rejoin the *century* and *year* columns that we created in the last example. `unite()` takes a data frame, the name of the new variable to create, and a set of columns to combine:
+#' 
+## --------------------------------------------------
+
+(yuck <- table3 %>%
+         separate_wider_position(year,
+                           c(century = 2, year = 2)) )
+
+yuck %>%
+     unite(new, century, year)
+
+
+#' 
+#' Dalam kasus ini, kita juga perlu menggunakan argument `sep`. Secara default, `unite()` akan menempatkan underscore (`"_"`) di antara nilai dari kolom yang berbeda. Di sini kita tidak ingin pemisah apa pun, jadi kita menggunakan `""`:
+#' 
+#' > In this case we also need to use the 'sep' argument. The default will place an underscore ("_") between the values from different columns. Here we don't want any separator so we use "":
+#' 
+## --------------------------------------------------
+
+yuck %>%
+     unite(new, century, year, sep = "")
+
+
+#' 
+#' 
+#' *giliran Anda*
+#' 
+#' > *your turn*
+#' 
+#' Q. Dengan menggunakan `table2`, gabungkan dua kolom pertama menjadi satu kolom yang berisi nama negara diikuti koma dan spasi, lalu tahun. Beri nama kolom baru ini `"label"`. Dengan kata lain, beberapa baris pertama seharusnya terlihat seperti ini:
+#' 
+#' > Q. Using `table2`, combine the first two columns into a single column that contains the country name followed by a comma and a space, and then the year. Name this new column "label".  In other words, the first few rows should look like this:
+#' 
+#'   label             type            count
+#'    <chr>             <chr>           <dbl>
+#'  1 Afghanistan, 1999 cases             745
+#'  2 Afghanistan, 1999 population   19987071
+#'  3 Afghanistan, 2000 cases            2666
+#'  4 Afghanistan, 2000 population   20595360
+#' 
+#' 
+## --------------------------------------------------
+
+table2
+
+
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' A2.
+#' 
+#' > A2.
+#' 
+## --------------------------------------------------
+
+table2 %>%
+     unite(label, country, year, sep = ", ")
+
+

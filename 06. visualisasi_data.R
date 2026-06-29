@@ -1,0 +1,1202 @@
+#' 
+#' # Latihan R di BBTNBKDS / R Training at BBTNBKDS
+#' ## 2026-06-29 s/d 2026-06
+#' ## disampikan oleh Andy Marshall, Universitas Michigan / delivered by Andy Marshall, University of Michigan
+#' 
+#' Visualisasi data
+#' 
+#' > Data visualization
+#' 
+#' # Memuat package / load packages
+#' 
+#' Di sini kita memuat kumpulan dasar package `{tidyverse}`, bersama dengan beberapa package berguna lainnya.
+#' 
+#' > Here we load the basic suite of {tidyverse} packages, along with some other useful packages.
+#' 
+## --------------------------------------------------
+
+library(tidyverse)
+library(palmerpenguins)
+library(gapminder)
+library(ggpubr)
+library(ggthemes)
+library(patchwork)
+library(viridis)
+library(viridisLite)
+
+
+#' 
+#' # Sumber daya yang berguna / useful resources
+#' 
+#' R Graph Gallery: <https://r-graph-gallery.com>  
+#' Fundamentals of Data Visualization oleh Claus Wilke: <https://clauswilke.com/dataviz/>  
+#' Data Visualization: A Practical Introduction oleh Kieran Healy: <https://socviz.co>  
+#' ggplot2: Elegant Graphics for Data Analysis oleh Hadley Wickham, Danielle Navarro, dan Thomas Lin Pedersen: <https://ggplot2-book.org>  
+#' R Graphics Cookbook oleh Winston Chang: <https://r-graphics.org>
+#' 
+#' > R Graph Gallery: https://r-graph-gallery.com
+#' > Fundamentals of Data Visualization by Claus Wilke: https://clauswilke.com/dataviz/
+#' > Data Visualization: A Practical Introduction by Kieran Healy: https://socviz.co
+#' > ggplot2: Elegant Graphics for Data Analysis by Hadley Wickham, Danielle Navarro, and Thomas Lin Pedersen: https://ggplot2-book.org
+#' > R Graphics Cookbook by Winston Chang: https://r-graphics.org
+#' 
+#' # Pengantar / introduction
+#' 
+#' Jika Anda selama ini hanya menggunakan Excel atau Google Sheets untuk membuat grafik, Anda mungkin terbiasa memulai visualisasi dengan memilih jenis grafik dari menu tertentu, misalnya *bar chart* atau *scatter plot*. Cara ini membuat kita cenderung memikirkan berbagai jenis grafik sebagai hal-hal yang terpisah dan tidak saling terhubung.
+#' 
+#' > If you’ve only used Excel or Google sheets to make graphs, you’re probably used to starting a visualization by selecting the type of graph you want to make from a set menu (e.g., bar chart, scatter plot). This encourages us to think of different graph types as separate and unconnected. 
+#' 
+#' Pendekatan lain adalah mengenali hal-hal yang dimiliki grafik secara umum, lalu menggunakan kesamaan tersebut sebagai titik awal untuk membuat grafik. Almarhum ahli statistik Leland Wilkinson memelopori pendekatan ini, dan pada tahun 1999 ia menerbitkan buku berjudul *The Grammar of Graphics* yang berusaha mengembangkan cara yang konsisten untuk mendeskripsikan semua grafik. Dalam buku tersebut, Wilkinson berpendapat bahwa kita sebaiknya tidak memikirkan plot sebagai jenis-jenis yang terpisah, tetapi sebagai sesuatu yang mengikuti sebuah tata bahasa atau *grammar* yang dapat kita gunakan untuk mendeskripsikan plot apa pun. Saat Wilkinson menulis bukunya, belum ada alat visualisasi data yang dapat menerapkan *grammar of graphics* tersebut. Hal ini berubah pada tahun 2010, ketika Hadley Wickham memperkenalkan package `{ggplot2}` untuk R dalam artikel berjudul “A Layered Grammar of Graphics.”
+#' 
+#' > An alternative approach is to recognize the things that graphs have in common and use these commonalities as the starting point for making them. The late statistician Leland Wilkinson pioneered this approach, and in 1999 he published a book called *The Grammar of Graphics* that sought to develop a consistent way of describing all graphs. In it, Wilkinson argued that we should think of plots not as distinct type, but as following a grammar that we can use to describe any plot. When Wilkinson wrote his book, no data visualization tool could implement his grammar of graphics. This would change in 2010, when Hadley Wickham announced the {ggplot2} package for R in an article titled “A Layered Grammar of Graphics.” 
+#' 
+#' # Penguin Palmer / palmer penguins
+#' 
+#' Untuk latihan ini, kita akan bekerja dengan dataset yang sudah dipublikasikan yang berisi pengukuran dari tiga spesies penguin di Palmer Station, sebuah lokasi penelitian di Antarktika. Data ini dikumpulkan oleh Dr. Kristen Gorman dan tersedia dalam package `{palmerpenguins}`, yang dikembangkan oleh Allison Horst, Alison Hill, dan Kristen Gorman.
+#' 
+#' > For this exercise we will work with a published data set that provides measurements taken on three species of penguins at the Palmer Station, a research site in Antarctica. The data were collected by Dr. Kristen Gorman and are made available in the {palmerpenguins} package, developed by Allison Horst, Alison Hill, and Kristen Gorman.
+#' 
+## --------------------------------------------------
+
+glimpse(penguins)
+
+
+#' 
+#' Untuk menyederhanakan sementara, kita akan menghapus nilai `NA` dari dataset dan menyimpannya kembali dengan nama yang sama. Kita menggunakan `drop_na()`, sebuah fungsi dari `{tidyr}` yang memilih hanya pengamatan tanpa `NA`.
+#' 
+#' > To simplify things for now, we'll remove the NAs from the dataset and save the it using the same name. We use `drop_na()`, a {tidyr} function that chooses only observation with no NAs.
+#' 
+## --------------------------------------------------
+
+penguins <- penguins %>%
+   drop_na()
+glimpse(penguins)
+
+
+#' 
+#' 
+#' # Dasar-dasar ggplot / ggplot basics
+#' 
+#' `{ggplot2}` bergantung pada gagasan bahwa plot memiliki beberapa lapisan. Hari ini kita akan membahas beberapa lapisan yang paling penting. Kita akan mulai dengan memilih variabel untuk dipetakan ke properti estetika. Kemudian kita akan memilih objek geometrik untuk merepresentasikan data kita. Selanjutnya, kita akan mengubah properti estetika grafik, misalnya skema warna, menggunakan fungsi `scale_`. Terakhir, kita akan menggunakan fungsi `theme_` untuk mengatur tampilan umum plot kita.
+#' 
+#' > {ggplot2} relies on the idea of plots having multiple layers. Today we’ll walk through some of the most important ones. We’ll begin by selecting variables to map to aesthetic properties. Then we’ll choose a geometric object to use to represent our data. Next, we’ll change the aesthetic properties of our chart (its color scheme, for example) using a scale_ function. Finally, we’ll use a theme_ function to set the overall look-and-feel of our plot.
+#' 
+#' # Lapisan 1: memetakan data ke properti estetika / layer 1: mapping data to aesthetic properties
+#' 
+#' Saat membuat grafik dengan ggplot, kita mulai dengan memetakan data ke properti estetika. Artinya, kita menggunakan hal-hal seperti sumbu x atau y, warna, dan ukuran — yaitu properti “estetika” — untuk merepresentasikan variabel. Di sini kita memilih dua ukuran linear dari dataset penguin.
+#' 
+#' > When creating a graph with ggplot, we begin by mapping data to aesthetic properties. All this really means is that we use things like the x or y axis, color, and size (the "aesthetic" properties) to represent variables. Here we selection two linear measures from the penguins data set.
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = flipper_length_mm))
+
+
+#' 
+#' Walaupun belum terlihat seperti grafik yang lengkap, kita bisa melihat bahwa `ggplot()` sudah menyiapkan jendela plot untuk kita. Variabel yang kita harapkan berada pada sumbu x dan y sudah berada di tempat yang benar. Kita juga bisa memeriksa rentang nilai untuk masing-masing variabel:
+#' 
+#' > Although this doesn't look like much, we can see that `ggplot()` has set up the plot window for us. The variables that we expect to be on the x and y axes are in the correct place.  We can also check the range of values for each variable:
+#' 
+## --------------------------------------------------
+
+penguins %>% 
+  summarize(min_mass = min(body_mass_g),
+            max_mass = max(body_mass_g),
+            min_flip = min(flipper_length_mm),
+            max_flip = max(flipper_length_mm))
+
+
+#' 
+#' yang mengonfirmasi bahwa ggplot telah memilih rentang yang masuk akal untuk sumbu x dan y.
+#' 
+#' > which confirms that ggplot has selected reasonable ranges for the x and y axes.
+#' 
+#' # Lapisan 2: memilih geoms / layer 2: selecting geoms
+#' 
+#' Untuk menambahkan representasi visual dari data, kita perlu menambahkan lapisan ggplot berikutnya: `geoms`, atau objek geometrik. Ini adalah fungsi-fungsi yang menyediakan berbagai cara untuk merepresentasikan data.
+#' 
+#' > To add a visual representation of the data, we need to add the next ggplot layer: geoms (geometric objects), which are functions that provide different ways of representing data.
+#' 
+#' ## scatterplot / scatterplot
+#' 
+#' `geom_point()` menambahkan scatterplot.
+#' 
+#' > `geom_point()` adds a scatterplot
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = flipper_length_mm)) +
+  geom_point()
+
+
+#' 
+#' 
+#' ## garis halus / smooths
+#' 
+#' Kita sering ingin menambahkan garis deskriptif ke scatterplot. Kita melakukannya dengan `geom_smooth()`. Di sini kita menggabungkannya dengan scatterplot, sehingga titik-titik datanya tetap terlihat.
+#' 
+#' > We often want to add a descriptive line to our scatterplots. We do this using `geom_smooth()`. Here we combine it with the scatter plot, so we can still see the points.
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = flipper_length_mm)) +
+    geom_point() +
+    geom_smooth() 
+
+
+#' 
+#' Default-nya adalah menambahkan garis `loess`, yaitu semacam rata-rata bergerak yang menunjukkan tren halus dalam data kita. ggplot juga menambahkan pita yang menunjukkan standard error, yaitu ukuran ketidakpastian kita terhadap hubungan yang digambarkan oleh garis loess. Kita bisa menyembunyikan standard error tersebut:
+#' 
+#' > The default is to add a 'loess' line, which is a kind of moving average that shows a smooth trend in our data. It has also added a strip showing the standard error, a measure of our certainty in the relationship depicted by the loess line. We could suppress the standard errors:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = flipper_length_mm)) +
+    geom_point() +
+    geom_smooth(se = FALSE) 
+
+
+#' 
+#' Namun, biasanya baik untuk menyertakannya. Jenis smooth lain yang umum adalah garis yang mencerminkan prediksi dari model matematika data kita. Di sini kita menambahkan garis regresi sederhana, yang didasarkan pada “linear model” atau `lm`, dan untuk itu kita perlu memberikan sebuah persamaan.
+#' 
+#' > It is usually good to include them, however. The other common sort of smooth is a line that reflects the predictions of a mathematical model of our data. Here we add a simple regression line, which is based on a "liner model", or "lm", for which we have to provide an equation.
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = flipper_length_mm)) +
+    geom_point() +
+    geom_smooth(method = "lm", formula = y ~ x) 
+
+
+#' 
+#' 
+#' ### giliran Anda / your turn
+#' 
+#' Q. Buat scatterplot `bill_length_mm` pada sumbu y terhadap `bill_depth_mm` pada sumbu x. Tambahkan garis regresi.
+#' 
+#' > Q. Plot a scatterplot of bill_length_mm (y axis) vs. bill_depth_mm (x-axis). Add a regression line.
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' A.
+#' 
+#' > A. 
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = bill_depth_mm, y = bill_length_mm)) +
+    geom_point() +
+    geom_smooth(method = "lm", formula = y ~ x) 
+
+
+#' 
+#' 
+#' ## histogram / histogram
+#' 
+#' Visualisasi data lain yang sangat umum adalah histogram, `geom_histogram()`, yang menunjukkan distribusi dari satu variabel:
+#' 
+#' > Another very common data visualization is the histogram, `geom_histogram()`, which shows the distribution of a single variable:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g)) +
+    geom_histogram() 
+
+
+#' 
+#' Kita bisa membaginya berdasarkan variabel kategorikal tertentu, sehingga subset data yang berbeda diisi dengan warna yang berbeda:
+#' 
+#' > We could divide this by some categorical variable, so different subsets of our data are filled with different colors:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, fill = sex)) +
+    geom_histogram() 
+
+
+#' 
+#' Perhatikan bahwa ggplot secara otomatis menambahkan legenda yang informatif.
+#' 
+#' > Notice ggplot has automatically added an informative legend.
+#' 
+#' Ada dua masalah di sini. Pertama, pengaturan default adalah menumpuk histogram. Dalam beberapa situasi ini berguna, tetapi ketika kita ingin membandingkan kelompok, ini bisa membingungkan. Kita lebih ingin histogram saling bertumpang tindih. Kita bisa mengubahnya dengan mengatur `position = "identity"`.
+#' 
+#' > There are two problems here. First, the default setting is to stack the histograms. In some instances this is helpful, but when we are looking to compare groups, this is confusing. We'd rather have the histograms overlap. We can change this by setting 'position = "identity"'
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, fill = sex)) +
+    geom_histogram(position = "identity") 
+
+
+#' 
+#' Ini terlihat lebih sesuai dengan yang kita inginkan, tetapi warnanya opak sehingga sulit membandingkan kedua distribusi. Ini akan lebih baik jika warnanya semi-transparan. Kita bisa melakukannya dengan mengatur `alpha`:
+#' 
+#' > This seems more what we want, but the colors are opaque so it is hard to compare the two distributions. This works better when the colors are semi-transparent. We can do this by setting the 'alpha':
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, fill = sex)) +
+    geom_histogram(position = "identity", alpha = 0.5) 
+
+
+#' 
+#' 
+#' ### giliran Anda / your turn
+#' 
+#' Q. Buat histogram `body_mass_g` yang menampilkan spesies yang berbeda dengan warna yang berbeda. Seperti di atas, atur histogram agar saling bertumpang tindih, dan buat warnanya semi-transparan.
+#' 
+#' > Q. Plots a histogram of body_mass_g that depicts the different species in different colors. As above, set the histograms so they overlap, and make the colors semitransparent.
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' A.
+#' 
+#' > A. 
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, fill = species))+
+    geom_histogram(position = "identity", alpha = 0.6) 
+
+
+#' 
+#' 
+#' ## plot density / denisty plots
+#' 
+#' Plot density pada dasarnya adalah histogram yang dihaluskan, dan dapat menjadi gambar deskriptif yang menarik.
+#' 
+#' > density plots are essentially smoothed histograms, and can make for appealing descriptive figures:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, fill = species)) +
+  geom_density(alpha = 0.25) 
+
+
+#' 
+#' 
+#' ## boxplot / boxplot
+#' 
+#' Box plot juga berguna untuk menunjukkan distribusi variabel.
+#' 
+#' > box plots are also useful for showing distributions of variables
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g)) +
+    geom_boxplot() 
+
+
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(y = body_mass_g, x = species)) +
+    geom_boxplot() 
+
+
+#' 
+#' Kadang-kadang orang suka menambahkan data mentah di atas box plot:
+#' 
+#' > Sometimes folks like to add the data on top of the box plots:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = species)) +
+    geom_boxplot() +
+    geom_point()
+
+
+#' 
+#' ## jittering / jittering
+#' 
+#' Dalam contoh ini, semua titik berjajar, dengan banyak tumpang tindih. Kita bisa menambahkan sedikit “noise” acak pada titik-titik tersebut agar sedikit terpisah dan lebih mudah dilihat. Untuk melakukan ini, kita menggunakan `geom_jitter()`.
+#' 
+#' > in this instance, all the points are lined up, with lots of overlap. We can add a small bit of random noise to the points to pull them apart to ease viewing them. to do this, we use `geom_jitter()`
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = species)) +
+    geom_boxplot() +
+    geom_jitter()
+
+
+#' 
+#' Menurut saya, itu terlalu banyak jitter. Kita bisa mengubah jumlah jitter vertikal dengan mengatur `height`, dan jumlah jitter horizontal dengan mengatur `width`. Contohnya:
+#' 
+#' > To me, that looks like too much jitter. We can change the amount of vertical jitter by setting the height, and the amount of horizontal jitter by setting the width. For example:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = species)) +
+    geom_boxplot() +
+    geom_jitter(height = 0.1)
+
+
+#' 
+#' Itu terlihat lebih baik. Kita bisa memperbaikinya lagi dengan membuat titik-titik semi-transparan dan mengubah warnanya:
+#' 
+#' > That looks better. We could improve on that by making the points semi-transparent and changing their color:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = species)) +
+    geom_boxplot() +
+    geom_jitter(height = 0.1, alpha = 0.25, 
+                col = "darkblue")
+
+
+#' 
+#' 
+#' ## violin plot / violin plots
+#' 
+#' Violin plot juga umum digunakan untuk menunjukkan distribusi variabel.
+#' 
+#' > violin plots are also commonly used to show distributions of variables
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = species)) +
+    geom_violin() 
+
+
+#' 
+#' dan sering digabungkan dengan box plot:
+#' 
+#' > and are often combined with box plot:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = species)) +
+    geom_violin() +
+    geom_boxplot()
+
+
+#' 
+#' Wah, kurang bagus. Mari kita ubah lebar box plot:
+#' 
+#' > yuck. Let's change the width of the box plot:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = species)) +
+    geom_violin() +
+    geom_boxplot(width = 0.1)
+
+
+#' 
+#' Kita juga bisa menambahkan titik-titik yang sudah diberi jitter:
+#' 
+#' > We could also add the jittered points:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = species)) +
+    geom_violin() +
+    geom_boxplot(width = 0.1) + 
+    geom_jitter(height = 0.075)
+
+
+#' 
+#' Dan mungkin menambahkan sedikit warna:
+#' 
+#' > And perhaps add some color:
+#' 
+## --------------------------------------------------
+ggplot(penguins, aes(x = body_mass_g, y = species)) +
+    geom_violin(col = "darkorange") +
+    geom_boxplot(width = 0.1, col = "navy", fill = "gray80") + 
+    geom_jitter(height = 0.075, alpha = 0.25, col = "darkblue")
+
+
+
+#' 
+#' Sekarang, Anda mungkin mulai melihat pola umum. Kode dasar yang sama dapat digunakan untuk menghasilkan berbagai macam plot dengan menambahkan `geom` yang berbeda. Masih ada banyak jenis `geom` lain untuk dieksplorasi.
+#' 
+#' > By now, you likely see a general pattern emerging. The same basic code can be used to produce a wide variety of plots by adding different geoms. There are many more geom types to explore.
+#' 
+#' # Lapisan 3: mengubah properti estetika / layer 3: altering aethetic properties
+#' 
+#' Sering kali kita ingin menyampaikan informasi tambahan dalam sebuah plot, misalnya dengan menampilkan subset data yang berbeda menggunakan bentuk atau warna yang berbeda.
+#' 
+#' > Often we would like to convey additional information on a plot (e.g., by plotting different subsets of data in different shapes or colors)
+#' 
+#' ## bentuk / shape
+#' 
+#' Di sini kita membedakan spesies penguin yang berbeda berdasarkan bentuk karakter plot. Kita menambahkan `shape = species` di dalam pemanggilan `aes`:
+#' 
+#' > Here we differentiate the different penguin species by the shape of the plotting character. We add 'shape = species' inside the aes call:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     shape = species)) +
+    geom_point() 
+
+
+#' 
+#' Itu berhasil, tetapi tidak terlalu membantu.
+#' 
+#' > That worked, but it isn't that helpful. 
+#' 
+#' ## warna / colors
+#' 
+#' Warna sering kali menjadi cara yang lebih efektif untuk membedakan kelompok. Mari kita coba memetakan estetika warna ke spesies:
+#' 
+#' > Color is often a more effective way to differentiate. Let's try mapping the color aesthetic to the species:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species)) +
+    geom_point() 
+
+
+#' 
+#' Ini mungkin lebih mudah dibedakan, tetapi skema warna default mencakup merah dan hijau, yang bagi sebagian orang sulit dibedakan. Skema warna `viridis` dirancang khusus agar ramah bagi orang dengan buta warna.
+#' 
+#' > That is perhaps easier to differentiate, but the default color scheme includes red and green, which some folks find difficult to differentiate. The viridis color scheme is specifically designed to be "color blind" friendly. 
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species)) +
+    geom_point() +
+    scale_color_viridis(discrete = TRUE)
+
+
+#' 
+#' Kita juga bisa memilih warna sendiri.
+#' 
+#' > We could also choose our own colors
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species)) +
+    geom_point() +
+    scale_color_manual(values = c("darkorange","cornflowerblue","cyan4"))
+
+
+#' 
+## --------------------------------------------------
+
+colors()
+
+
+#' 
+#' 
+#' Kita bisa menggabungkan warna dan bentuk untuk menyampaikan informasi tambahan:
+#' 
+#' > We could combine color and shape to convey additional information:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species,
+                     shape = sex)) +
+    geom_point() +
+    scale_color_manual(values = c("darkorange","cornflowerblue","cyan4"))
+
+
+#' 
+#' ### giliran Anda / your turn
+#' 
+#' Q. Modifikasi kode di bawah untuk memplot massa tubuh pada sumbu x terhadap `bill_length_mm` pada sumbu y, dengan spesies penguin dibedakan berdasarkan warna dan pulau dibedakan berdasarkan bentuk. Pilih tiga warna sesuai selera Anda. Untuk melihat daftar nama warna di R, ketik `colors()` di Console. Untuk mengunduh PDF yang menampilkan warna-warna tersebut, lihat www.stat.auckland.ac.nz/~ihaka/downloads/R-colours-a4.pdf
+#' 
+#' > Q. Modify the code below to plot body mass (x axis) vs. bill_length_mm (y axis), with penguin species distinguished by color and island distinguished by shape. Choose three colors of your own liking. For a list of the named colors in R, type `colors()` in the console. To download a pdf showing www.stat.auckland.ac.nz/~ihaka/downloads/R-colours-a4.pdf
+#' 
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species,
+                     shape = sex)) +
+    geom_point() +
+    scale_color_manual(values = c("darkorange","cornflowerblue","cyan4"))
+
+
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' 
+#' A.
+#' 
+#' > A. 
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = bill_length_mm, 
+                     col = species,
+                     shape = island)) +
+    geom_point() +
+    scale_color_manual(values = c("chocolate","seagreen","navy"))
+
+
+#' 
+#' 
+#' ## transparansi / transparency
+#' 
+#' Seperti yang kita lihat di atas, membuat titik-titik menjadi semi-transparan bisa sangat membantu. Kita melakukannya dengan mengatur `alpha` di dalam `geom_point()`.
+#' 
+#' > As we saw above, making points semi-transparent can be quite helpful. We do this by setting the 'alpha' in `geom_point()`
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species,
+                     shape = sex)) +
+    geom_point(alpha = 0.5) +
+    scale_color_manual(values = c("darkorange","cornflowerblue","cyan4"))
+
+
+#' 
+#' Mungkin membuatnya sedikit kurang transparan akan membantu? Kita bisa meningkatkan nilai `alpha`:
+#' 
+#' > Maybe making them less transparent would help? We can increase the alpha value:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species,
+                     shape = sex)) +
+    geom_point(alpha = 0.75) +
+    scale_color_manual(values = c("darkorange","cornflowerblue","cyan4"))
+
+
+#' 
+#' 
+#' ## ukuran / size
+#' 
+#' Kita juga bisa membuat semua titik menjadi lebih besar.
+#' 
+#' > We could also make all the points larger
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species,
+                     shape = sex)) +
+    geom_point(alpha = 0.5, size = 3) +
+    scale_color_manual(values = c("darkorange","cornflowerblue","cyan4"))
+
+
+#' 
+#' Ukuran juga dapat dipetakan ke properti estetika. Di sini kita membuat ukuran titik sebanding dengan kedalaman paruh.
+#' 
+#' > size can also be mapped onto aesthetic properties. Here we make the point size proportional to the bill depth
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species,
+                     shape = sex,
+                     size = bill_depth_mm)) +
+    geom_point(alpha = 0.5, size = 3) +
+    scale_color_manual(values = c("darkorange","cornflowerblue","cyan4"))
+
+
+#' 
+#' Apa yang terjadi? Kita mengatur `size` dua kali, dan pengaturan kedua menggantikan yang pertama.
+#' 
+#' > What happened? We set size twice, and the second overrode the first.
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species,
+                     shape = sex,
+                     size = bill_depth_mm)) +
+    geom_point(alpha = 0.5) +
+    scale_color_manual(values = c("darkorange","cornflowerblue","cyan4"))
+
+
+#' 
+#' Mungkin ada terlalu banyak informasi dalam satu plot, tetapi Anda bisa melihat fleksibilitasnya.
+#' 
+#' > There is probably too much information here for one plot, but you can get the sense of the flexibility here.
+#' 
+#' 
+#' ## label / labels
+#' 
+#' Kita bisa mengubah atau menambahkan berbagai label agar plot menjadi lebih baik. Di sini kita menambahkan judul serta label sumbu x dan y sendiri.
+#' 
+#' > We can change or add various labels to make the plot better. Here we add a title and our own x and y axis labels.
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species,
+                     shape = sex,
+                     size = bill_depth_mm)) +
+    geom_point(alpha = 0.5) +
+    scale_color_manual(values = c("darkorange","cornflowerblue","cyan4")) +
+    labs(title = "Relationship Between Flipper Length and Body Mass for Palmer Penguins",
+       x = "Body Mass (g)", y = "Flipper Length (mm)")
+
+
+#' 
+#' ## koordinat / coordinates
+#' 
+#' Kita bisa mengubah sumbu dengan mengubah koordinat. Di sini kita membalik sumbu menggunakan `coord_flip()`:
+#' 
+#' > We can alter the axes by changing the coordinates. Here we flip the axes using `coord_flip()`:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species,
+                     shape = sex,
+                     size = bill_depth_mm)) +
+    geom_point(alpha = 0.5) +
+    coord_flip() +
+    scale_color_manual(values = c("darkorange","cornflowerblue","cyan4")) +
+    labs(title = "Relationship Between Flipper Length and Body Mass for Palmer Penguins",
+       x = "Body Mass (g)", y = "Flipper Length (mm)")
+
+
+#' 
+#' Sebagai alternatif, kita bisa mengubah rentang data yang ditampilkan dengan mengatur batas sumbu menggunakan `coord_cartesian()`:
+#' 
+#' > Alternatively, we can change the range of data depicted by setting the axis limits using `coord_cartesian()`:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species,
+                     shape = sex,
+                     size = bill_depth_mm)) +
+    geom_point(alpha = 0.5) +
+    coord_cartesian(xlim = c(3000, 5000),
+                    ylim = c(170, 200)) +
+    scale_color_manual(values = c("darkorange","cornflowerblue","cyan4")) +
+    labs(title = "Relationship Between Flipper Length and Body Mass for Palmer Penguins",
+       x = "Body Mass (g)", y = "Flipper Length (mm)")
+
+
+#' 
+#' ## sumbu dan tanda tick / axis and tick marks
+#' 
+#' Kadang-kadang kita ingin mengatur sendiri tanda tick pada sumbu. Kita bisa melakukannya menggunakan `scale_y_continuous()` untuk variabel kontinu. Kita menggunakan `scale_x_continuous()` untuk mengubah sumbu x.
+#' 
+#' > Sometimes, we want to set the axis ticks ourselves. We can do this using `scale_y_continuous()` for continuous variables (we use `scale_x_continuous()` to change the x axis)
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species,
+                     shape = sex,
+                     size = bill_depth_mm)) +
+    geom_point(alpha = 0.5) +
+    scale_y_continuous(breaks = c(180, 200, 220)) +
+    scale_color_manual(values = c("darkorange",
+                                  "cornflowerblue",
+                                  "cyan4")) +
+    labs(title = "Relationship Between Flipper Length and Body Mass for Palmer Penguins",
+       x = "Body Mass (g)", y = "Flipper Length (mm)")
+
+
+#' 
+#' Kita juga bisa mengubah skala untuk variabel diskrit:
+#' 
+#' > We can also change the scale for discrete variables:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = species)) +
+    geom_boxplot() +
+    geom_jitter(height = 0.1) +
+    scale_y_discrete(limits = c("Adelie", "Chinstrap"))
+
+
+#' 
+#' 
+#' # Lapisan 4: tema / layer 4: themes 
+#' 
+#' ## mengubah elemen tertentu / changing specific elements
+#' 
+#' Anda bisa menyesuaikan ggplot dengan banyak cara. Untuk kontrol yang lebih rinci, Anda dapat mengubah hal-hal seperti sumbu, tanda tick, warna, legenda, dan sebagainya satu per satu. Ini dilakukan dengan mengubah aspek tema menggunakan `theme()`. Misalnya, kode ini menghapus garis grid:
+#' 
+#' > You can customize ggplots in many ways. For fine scale control, you will want to tweak things like axes, tick marks, colors, legend, etc one at a time. You do this by changing aspects of the theme, using `theme()`. For example, this removed the grid lines:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species)) +
+    geom_point() +
+    geom_smooth(method = "lm", formula = y ~ x) +
+    theme(panel.grid = element_blank())
+
+
+#' 
+#' Ini menambahkan garis sumbu:
+#' 
+#' > This adds an axis line:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species)) +
+    geom_point() +
+    geom_smooth(method = "lm", formula = y ~ x) +
+    theme(axis.line = element_line())
+
+
+#' 
+#' Ini juga mengubah ukuran teks:
+#' 
+#' > This changes text size, too:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species)) +
+    geom_point() +
+    geom_smooth(method = "lm", formula = y ~ x) +
+    theme(axis.line = element_line(),
+         axis.title = element_text(size = 18))
+
+
+#' 
+#' Anda juga bisa mengubah aspek legenda. Di sini kita memindahkan lokasi legenda:
+#' 
+#' > You can also change aspects of the legend. Here we can move the location of the legend:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = species, col = species)) +
+    geom_violin() +
+    geom_boxplot(width = 0.1) + 
+    geom_jitter(height = 0.075) +   
+    theme(legend.position = "top")
+
+
+#' 
+#' Dalam contoh ini, legenda sebenarnya berlebihan, jadi kita bisa menghapusnya:
+#' 
+#' > In this instance, it is redundant, so we can just remove it:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = species, col = species)) +
+    geom_violin() +
+    geom_boxplot(width = 0.1) + 
+    geom_jitter(height = 0.075) +   
+    theme(legend.position = "none")
+
+
+#' 
+#' Ada banyak hal yang bisa Anda sesuaikan dalam plot. Lihat `?theme()` untuk informasi lebih lanjut tentang cara menyesuaikan elemen-elemen individual dalam plot.
+#' 
+#' > There are lots of things you can customize about plots. See `?theme()` for more information on how you can customize individual elements of plots.
+#' 
+#' ## mengubah keseluruhan plot / changing the whole plot
+#' 
+#' Sebagai alternatif, Anda bisa memilih sebuah tema yang akan mengubah banyak elemen non-data sekaligus. Di sini kita mengganti tema default (`theme_gray()`) dengan tema hitam-putih sederhana.
+#' 
+#' > Alternatively, you can select a theme that will modify a bunch of non-data elements all at once. Here we replace the default theme (`theme_gray()`) with a simple black and white one.
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species)) +
+    geom_point() +
+    geom_smooth(method = "lm", formula = y ~ x) +
+    theme_bw()
+
+
+#' 
+#' Berikut tema gelap:
+#' 
+#' > Here is a dark one:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species)) +
+    geom_point() +
+    geom_smooth(method = "lm", formula = y ~ x) +
+    theme_dark()
+
+
+#' 
+#' 
+#' Dan tema minimalis, yang merupakan default pribadi saya:
+#' 
+#' > And a minimal one (my personal default):
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species)) +
+    geom_point() +
+    geom_smooth(method = "lm", formula = y ~ x) +
+    theme_minimal()
+
+
+#' 
+#' Perhatikan, di sini saya memindahkan estetika warna sehingga hanya berlaku untuk titik-titik, bukan seluruh plot. Sekarang kita mendapatkan satu garis regresi saja.
+#' 
+#' > Note, here I moved the color aesthetic so it applies only to the points, not the whole plot. Now, we get a single regression line
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm)) +
+    geom_point(aes(col = species)) +
+    geom_smooth(method = "lm", formula = y ~ x) +
+    theme_minimal()
+
+
+#' 
+#' Dalam contoh ini, saya kurang suka garis regresinya berwarna biru, karena warnanya mirip dengan salah satu warna spesies. Jadi, kita ubah warna garisnya:
+#' 
+#' > In this instance, I don't love that the regression line is blue, a similar color to one of our species. So, we change the line color:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm)) +
+    geom_point(aes(col = species)) +
+    geom_smooth(method = "lm", formula = y ~ x, 
+                col = "gray") +
+    theme_minimal()
+
+
+#' 
+#' Secara pribadi, saya lebih suka data berada di atas garis, jadi kita bisa mengubah urutan lapisannya:
+#' 
+#' > Personally, I prefer the data on top of the line, so we can change the order of the layers:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm)) +
+    geom_smooth(method = "lm", formula = y ~ x, 
+                col = "gray") +
+    geom_point(aes(col = species)) +
+    theme_minimal()
+
+
+#' 
+#' Saat ini, ggplot2 menyertakan sembilan tema secara default (`theme_x()`, dengan `x = bw`, `light`, `classic`, `linedraw`, `dark`, `minimal`, `void`, `test`, dan `gray`, yaitu default).
+#' 
+#' > ggplot2 currently includes nine themes by default (theme_x(), where x = bw, light, classic, linedraw, dark, minimal, void, test, and gray (the default))
+#' 
+#' Banyak tema lain tersedia dalam package tambahan seperti `{ggthemes}` (<https://github.com/jrnold/ggthemes>), oleh Jeffrey Arnold. Ini mencakup tema yang terinspirasi oleh majalah besar, situs web, program, dan desainer:
+#' 
+#' > Many more are included in add-on packages like {ggthemes} (<https://github.com/jrnold/ggthemes>), by Jeffrey Arnold. These include themes inspired by major magazines, websites, programs, and designers:
+#' 
+#' `theme_base`: tema yang menyerupai grafik base R default.  
+#' `theme_calc`: tema berdasarkan LibreOffice Calc.  
+#' `theme_economist`: tema berdasarkan plot di majalah *The Economist*.  
+#' `theme_excel`: tema yang meniru grafik abu-abu klasik yang kurang menarik di Excel.  
+#' `theme_few`: tema dari “Practical Rules for Using Color in Charts” karya Stephen Few.  
+#' `theme_fivethirtyeight`: tema berdasarkan plot di fivethirtyeight.com.  
+#' `theme_gdocs`: tema berdasarkan Google Docs.  
+#' `theme_hc`: tema berdasarkan Highcharts JS.  
+#' `theme_par`: tema yang menggunakan nilai parameter grafik base R saat ini dalam `par`.  
+#' `theme_pander`: tema untuk digunakan dengan package `pander`.  
+#' `theme_solarized`: tema yang menggunakan palet warna solarized.  
+#' `theme_stata`: tema berdasarkan skema grafik Stata.  
+#' `theme_tufte`: tema minimalis berdasarkan *The Visual Display of Quantitative Information* karya Tufte.  
+#' `theme_wsj`: tema berdasarkan plot di *The Wall Street Journal*.
+#' 
+#' > theme_base: a theme resembling the default base graphics in R. 
+#' > theme_calc: a theme based on LibreOffice Calc.
+#' > theme_economist: a theme based on the plots in the The Economist magazine.
+#' > theme_excel: a theme replicating the classic ugly gray charts in Excel
+#' > theme_few: theme from Stephen Few's "Practical Rules for Using Color in Charts".
+#' > theme_fivethirtyeight: a theme based on the plots at fivethirtyeight.com.
+#' > theme_gdocs: a theme based on Google Docs.
+#' > theme_hc: a theme based on Highcharts JS.
+#' > theme_par: a theme that uses the current values of the base graphics parameters in par.
+#' > theme_pander: a theme to use with the pander package.
+#' > theme_solarized: a theme using the solarized color palette.
+#' > theme_stata: themes based on Stata graph schemes.
+#' > theme_tufte: a minimal ink theme based on Tufte's The Visual Display of Quantitative Information.
+#' > theme_wsj: a theme based on the plots in the The Wall Street Journal.
+#' 
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species)) +
+    geom_point() +
+    geom_smooth(method = "lm", formula = y ~ x) +
+    theme_fivethirtyeight()
+
+
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species)) +
+    geom_point() +
+    geom_smooth(method = "lm", formula = y ~ x) +
+    theme_economist()
+
+
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species)) +
+    geom_point() +
+    geom_smooth(method = "lm", formula = y ~ x) +
+    theme_excel()
+
+
+#' 
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, 
+                     y = flipper_length_mm, 
+                     col = species)) +
+    geom_point() +
+    geom_smooth(method = "lm", formula = y ~ x) +
+    theme_solarized()
+
+
+#' 
+#' Anda bisa mengatur tema untuk setiap plot secara terpisah, atau untuk seluruh dokumen menggunakan `theme_set()`, misalnya `theme_set(theme_economist)`.
+#' 
+#' > You can set themes on a plot by plot basis, or for the whole document using: `theme_set()`, e.g., theme_set(theme_economist)
+#' 
+#' Anda juga bisa membuat tema sendiri.
+#' 
+#' > You can also create your own themes.
+#' 
+#' Untuk informasi lebih lanjut tentang tema, lihat:
+#' 
+#' > For more on themes, see: 
+#' 
+#' <https://ggplot2.tidyverse.org/reference/ggtheme.html>
+#' 
+#' <https://yutannihilation.github.io/allYourFigureAreBelongToUs/ggthemes>
+#' 
+#' > https://ggplot2.tidyverse.org/reference/ggtheme.html
+#' >
+#' > https://yutannihilation.github.io/allYourFigureAreBelongToUs/ggthemes
+#' 
+#' # Faceting / faceting
+#' 
+#' Facet adalah plot-plot kecil yang menampilkan subset data yang berbeda. Ini adalah salah satu “kekuatan super” ggplot. Facet sangat berguna ketika Anda memiliki kategori diskrit, serta untuk mengeksplorasi hubungan kondisional dan data yang besar.
+#' 
+#' > Facets are smaller plots that display different subsets of the data. This is one of ggplot's super powers. They are particularly useful when you have discrete categories, and for exploring conditional relationships and large data. 
+#' 
+#' `facet_wrap()` membagi data berdasarkan satu variabel; di sini variabelnya adalah `sex`.
+#' 
+#' > `facet_wrap()` splits the data by a single variable, here sex
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = flipper_length_mm, 
+                         col = species)) +
+    geom_point() + 
+    facet_wrap(~ sex) +
+    labs(title = "Relationship Between Flipper Size and Body Mass for Palmer Penguins",
+       x = "Body Mass (g)", y = "Flipper Length (mm)") +
+  theme_bw()
+
+
+#' 
+#' Di sini menggunakan `island`:
+#' 
+#' > Here island: 
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = flipper_length_mm, 
+                         col = species)) +
+    geom_point() + 
+    facet_wrap(~ island) +
+    labs(title = "Relationship Between Flipper Size and Body Mass for Palmer Penguins",
+       x = "Body Mass (g)", y = "Flipper Length (mm)") +
+  theme_bw()
+
+
+#' 
+#' Kita bisa mengatur jumlah baris atau kolom menggunakan `facet_wrap()`:
+#' 
+#' > We can set the number of rows or columns using `facet_wrap()`:
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = flipper_length_mm, 
+                         col = species)) +
+    geom_point() + 
+    facet_wrap(~ island, nrow = 3) +
+    labs(title = "Relationship Between Flipper Size and Body Mass for Palmer Penguins",
+       x = "Body Mass (g)", y = "Flipper Length (mm)") +
+    theme_bw()
+
+
+#' 
+#' `facet_grid()` membagi data berdasarkan dua variabel; di sini variabelnya adalah `sex` dan `species`.
+#' 
+#' > `facet_grid()` splits the data by two variables, here sex and species
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = flipper_length_mm, 
+                         col = species)) +
+    geom_point(size = 2, alpha = 0.5) + 
+    geom_smooth(method = lm, formula = y ~ x, 
+                se = FALSE, size = 1.5) +
+    facet_grid(sex ~ species) +
+    theme_bw() + 
+    labs(title = "Flipper Length and Body Mass, by Sex & Species",
+         x = "Body Mass (g)", 
+         y = "Flipper Length (mm)")
+
+
+#' 
+#' Balik posisi baris dan kolom:
+#' 
+#' > flip rows and columns
+#' 
+## --------------------------------------------------
+
+ggplot(penguins, aes(x = body_mass_g, y = flipper_length_mm, 
+                         col = species)) +
+    geom_point(size = 2, alpha = 0.5) + 
+    geom_smooth(method = lm, formula = y ~ x, 
+                se = FALSE, size = 1.5) +
+    facet_grid(species ~ sex) +
+    theme_bw() + 
+    labs(title = "Flipper Length and Body Mass, by Sex & Species",
+         x = "Body Mass (g)", 
+         y = "Flipper Length (mm)")
+
+
