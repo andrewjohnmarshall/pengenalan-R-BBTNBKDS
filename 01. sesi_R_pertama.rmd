@@ -72,6 +72,20 @@ Ini adalah teks biasa.
 
 ```{r}
 
+# teks yang ditulis di sini (di dalam code chunk) ditafsirkan sebagai kode R
+# apa pun yang ditulis setelah tanda pagar (#) tidak akan dijalankan
+# menambahkan tanda pagar (#) di mana saja membuat R mengabaikan semua yang mengikutinya pada baris itu
+# atau sampai Anda menekan Return/Enter untuk membuat baris baru
+
+5 +  7 # baris ini menjumlahkan dua angka
+
+semua baris di dalam code chunk yang tidak diawali dengan '#' akan dijalankan  # aduh
+
+```
+
+
+```{r}
+
 # text written here (inside a code chunk) is interpreted as R code
 # any thing written after a hash will not be executed
 # adding a hash anywhere makes R ignore everything following it on that line (or until you hit return to make a new line)

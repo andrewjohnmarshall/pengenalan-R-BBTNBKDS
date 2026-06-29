@@ -9,7 +9,7 @@ Dalam modul ini, saya akan memperkenalkan Anda pada `{tidyverse}`, yaitu kumpula
 
 > In this module I'll introduce you to the {tidyverse}, which are a very popular set of packages for data science work in R. This set of packages that work in harmony because they share common data representations (and design feaures in the programs themselves). It is easy to install and load core packages from the tidyverse in a single command: `library(tidyverse)`, which includes, among other things, {readr}, {dplyr}, {tidyr}, and {ggplot2}
 
-## dasar-dasar package / package basics
+# dasar-dasar package / package basics
 
 Package R adalah kumpulan alat tambahan yang menambahkan fungsi, dataset, dan fitur baru ke R dasar atau *base R*. Kita menggunakan package karena package memungkinkan kita melakukan tugas yang lebih khusus tanpa harus menulis semuanya dari awal—misalnya membuat grafik yang lebih baik, membersihkan data, membaca berbagai jenis file, menjalankan model statistik, atau membuat peta. Dalam praktiknya, package adalah salah satu alasan utama mengapa R sangat kuat: orang-orang di seluruh dunia mengembangkan dan membagikannya, sehingga kita bisa membangun pekerjaan kita berdasarkan alat yang sudah ada dan menggunakan alat yang andal untuk berbagai jenis analisis.
 
@@ -24,7 +24,7 @@ Setiap kali kita ingin menggunakan sebuah package dalam suatu project, kita haru
 > Every time we want to use a package in a given project we have to load the code using the `library()` syntax. This is akin to turning a lightbulb on. Every time we shut R down, or use a new project, we have to reload the package into the library (turn the light on).
 
 
-## memuat package / load packages
+# memuat package / load packages
 
 Di sini kita memuat kumpulan dasar package `{tidyverse}`.
 
@@ -41,7 +41,7 @@ Berikut adalah daftar package `{tidyverse}` yang diinstal secara default: <https
 > Here is a list of the {tidyverse} packages that are installed by default: https://www.tidyverse.org/packages/
 
 
-## operator infix / infix operators
+# operator infix / infix operators
 
 Operator *infix* adalah mekanisme untuk merangkai beberapa perintah. Secara informal, kita sering menyebutnya sebagai “pipe”. Secara klasik, `{tidyverse}` menggunakan karakter `%>%` untuk mendefinisikan sebuah pipe.
 
@@ -54,7 +54,7 @@ cars %>% head()
 head(cars)
 
 cars %>% head() %>% summary()
-summary(head(cars))
+sum(head(cars))
 
 ```  
 
@@ -72,15 +72,6 @@ cars |> head()
 cars |> head() |> summary()
 
 ```
-
-Saya semakin sering melihat pipe dari `{base}` R muncul dalam kode `{tidyverse}`, termasuk dalam buku *R for Data Science* karya Wickham sendiri. Lihat <https://r4ds.hadley.nz/data-transform.html#sec-the-pipe>
-
-> I am seeing the {base} R pipe cropping up more and more in {tidyverse} code, including in Wickham's own *R for Data Science* book. See https://r4ds.hadley.nz/data-transform.html#sec-the-pipe
-
-Untuk sebagian besar penggunaan tingkat pemula hingga menengah, pipe baru dari base R `|>` setara dengan pipe dari `{tidyverse}` yaitu `%>%`. Saat menggunakan fungsi-fungsi `{tidyverse}`, saat ini saya tidak melihat alasan kuat untuk menggunakan pipe baru `|>` yang pada akhirnya lebih terbatas, jadi saya akan tetap menggunakan `%>%`. Anda boleh menggunakan salah satu.
-
-> For most beginner to intermediate uses, the new base R pipe '|>' is equivalent to the {tidyverse}’s pipe '%>%'. When using {tidyverse} functions, I see no reason at present to use the new (but ultimately more limited) '|>', so I will continue to use '%>%'. You may use either. 
-
 
 Pintasan keyboard untuk menyisipkan pipe adalah:
 
@@ -102,28 +93,15 @@ Cobalah:
 
 ```
 
-Pipe mana yang ditambahkan bergantung pada pengaturan Anda. Secara default, yang digunakan adalah pipe asli `{tidyverse}` yaitu `%>%`, tetapi Anda bisa mengubahnya melalui **Tools -> Global options -> Code editor**.
-
-> Which pipe is added depends on your settings. But default, it is the original  {tidyverse} pipe '%>%', but you can change this in Tools -> Global options -> Code editor
-
-
-Jika Anda ingin tahu lebih lanjut, Anda bisa membaca pemikiran Hadley Wickham tentang hal ini di sini:
-
-> If you want to know more, you can read Hadley Wickham's thoughts on this here:
-
-<https://www.tidyverse.org/blog/2023/04/base-vs-magrittr-pipe/>
-
-> https://www.tidyverse.org/blog/2023/04/base-vs-magrittr-pipe/
-
 Apakah Anda menggunakan pipe atau tidak sebagian besar merupakan masalah gaya penulisan kode, meskipun dalam beberapa konteks salah satu pipe mungkin lebih disukai untuk meningkatkan keterbacaan.
 
 > Whether you use pipes or not is largely a matter of style, although one or the other may be preferred in some contexts to improve readability.
 
-Pipe digunakan secara luas dalam tidyverse Hadley Wickham. Satu-satunya pengecualian adalah `{ggplot2}`: package ini ditulis sebelum pipe dibuat.
+Pipe digunakan secara luas dalam tidyverse. Satu-satunya pengecualian adalah `{ggplot2}`: package ini ditulis sebelum pipe dibuat.
 
-> Pipes are widely used in to Hadley Wickham's tidyverse. The only exception is {ggplot2}: it was written before the pipe was created. 
+> Pipes are widely used in the tidyverse. The only exception is {ggplot2}: it was written before the pipe was created. 
 
-## tibble / tibbles
+# tibble / tibbles
 
 Tibble adalah alternatif untuk `data.frame` tradisional di R. Tibble adalah data frame, tetapi dengan sedikit penyesuaian agar bekerja lebih baik dalam tidyverse.
 
@@ -168,16 +146,6 @@ as_tibble(mtcars)
 
 ```
 
-Mari kita lihat lagi dataset `flights`:
-
-> Let's look again at the flights data set:
-
-```{r}
-
-flights
-
-```
-
 Satu pertanyaan yang mungkin muncul saat melihat tibble adalah mengapa beberapa angka diberi garis bawah. Menurut dokumentasi `tidyverse`, ini dilakukan di tibble untuk “memberikan gambaran yang lebih baik tentang orde besarnya angka”. Kelompok tiga digit diberi garis bawah, dimulai dari digit keempat sebelum atau sesudah titik desimal. Pada dasarnya, ini mirip seperti pemisah koma untuk ribuan, tetapi berlaku di kedua sisi titik desimal. Berikut contoh sederhana:
 
 > One obvious question one might have looking at tibbles is why some numbers are underlined. According to 'tidyverse' documentation, this is done in tibbles to "give better idea of the order of magnitude of the numbers". Groups of three digits are underlined, starting with the fourth before/after the decimal point. Essentially this works like the comma separator for 1,000s, but holds on both sides of the decimal point. A simple example:
@@ -213,14 +181,3 @@ flights %>%
 ```
 
 Beberapa fungsi lama tidak bekerja dengan tibble. Jika Anda menemukan salah satu fungsi seperti ini, gunakan `as.data.frame()` untuk mengubah tibble kembali menjadi data frame:
-
-> Some older functions don't work with tibbles. If you encounter one of these functions, use `as.data.frame()` to turn a tibble back to a data frame:
-     
-```{r}
-
-flights
-fl2 <- as.data.frame(flights)
-fl2
-
-```
-````

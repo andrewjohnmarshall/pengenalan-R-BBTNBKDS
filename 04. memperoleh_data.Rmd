@@ -1,0 +1,551 @@
+
+# Latihan R di BBTNBKDS / R Training at BBTNBKDS
+## 2026-06-29 s/d 2026-06
+## disampikan oleh Andy Marshall, Universitas Michigan
+
+# Memperoleh data / Acquiring data
+
+## format file / file formats
+
+R dapat membaca data dari banyak sekali format yang berbeda. Dalam kelas ini, kita akan fokus pada jenis data yang kemungkinan besar akan Anda temui: `.csv`, `.xlsx`, dan Google Sheets. Kebanyakan orang yang saya kenal yang menggunakan R memakai file `.csv`, meskipun pengguna yang lebih mahir cenderung menggunakan format file khusus R, mungkin karena format biner tersebut membuat ukuran file jauh lebih kecil untuk jumlah data yang sama.
+
+> R can read in data from a ton of different formats. In this class, we'll focus on the kinds of data you are most likely to encounter: .csv, .xlsx, and googlesheets. Most folks I know who use R use .csv files, although more advanced users tend towards R's file formats (probably because their binary formats make the files much smaller for a given amount of data).
+
+## package tambahan / additional packages
+
+Package R tambahan memungkinkan kita membaca berbagai macam format data. Berikut beberapa package yang mungkin berguna nanti:
+
+> Additional R packages allow to read a wide variety of data formats. Here are a few packages might be of use down the line:
+
+`{sf}`, `{sp}`:          data spasial standar, seperti poligon, titik, dan garis.  
+`{raster}`, `{stars}`:   data spasial berbentuk grid  
+`{rjson}`:              data JSON, yaitu JavaScript Object Notation  
+`{xml2}`:               file XML  
+`{png}`, `{jpeg}`:      gambar raster  
+`{RSQLite}`, `{RMySQL}`: data dalam basis data relasional  
+`{foreign}`, `{haven}`: data dari SAS, SPSS, Stata, dan lain-lain
+
+> {sf}, {sp}:          standard spatial data (polygons, points, lines).
+> {raster}, {stars}:   gridded spatial data
+> {rjson}:             JSON (JavaScript Object Notation) data
+> {xml2}:              xml files
+> {png}, {jpeg}:       raster images
+> {RSQLite}, {RMySQL}: data in relational data bases
+> {foreign}, {haven}:  data from SAS, SPSS, Stata, etc
+
+
+## .csv / .csv
+
+Seperti format spreadsheet lainnya, misalnya `.xlsx` dan Google Sheets, file *comma-separated values* atau CSV memungkinkan kita menyimpan tabel data. Kelebihannya dibanding format lain adalah CSV jauh lebih sederhana. CSV adalah file teks biasa, yang berarti semua informasi penting dalam file tersebut direpresentasikan sebagai teks. Tidak ada workbook atau metadata tambahan yang kadang membuat file sulit dibuka. Ini membuat CSV sangat fleksibel dan sangat sederhana, sehingga banyak dari kita lebih memilihnya sebagai metode penyimpanan data. Contohnya: <https://github.com/andrewjohnmarshall/gp_orangutan_dispersion/tree/main/data%20files>
+
+> Like other spreadsheet formats (.xlsx, googlesheets), comma-separated values (CSV) files allow us to store data tables. The benefit over other formats is that they are much simpler; they are plain-text files, which means that all the important information in the file is represented by text. There are no workbooks or associated metadata that can make it difficult to open these files. This makes them very flexible and super simple, making them preferred storage method for data for many of us. (e.g., https://github.com/andrewjohnmarshall/gp_orangutan_dispersion/tree/main/data%20files)
+
+Dalam file `.csv`, setiap sel data dipisahkan oleh koma, dan setiap baris dipisahkan oleh baris baru. Ini membuat data sangat mudah dimuat:
+
+> In .csv files, each data cell is separated by a comma, and each line by a line break, making it very easy to load:
+
+```{r}
+
+apes <- read.csv("googleapes.csv")
+apes
+
+# some simple commands to explore data
+str(apes)   # show data structure
+head(apes)  # show first few rows
+tail(apes)  # show last few rows
+names(apes) # show headers
+dim(apes)   # show dimensions (rows, commas)
+nrow(apes)  # show number of rows
+ncol(apes)  # show number of columns
+
+```
+
+Walaupun secara umum sederhana, tetap ada beberapa hal yang bisa menjadi kendala. Misalnya, di banyak negara Eropa, koma digunakan sebagai tanda desimal. Dalam kasus seperti ini, nilai biasanya dipisahkan dengan titik koma (`;`), bukan koma (`,`). Fungsi `read.csv2()` menyelesaikan masalah ini, karena fungsi tersebut menggunakan titik koma sebagai pemisah, bukan koma, dan menafsirkan koma sebagai tanda desimal. Untuk data yang dipisahkan oleh tab, `read.delim()` dan `read_delim2()` memiliki tujuan yang serupa.
+
+> Despite this general simplicity, there are still sticking points. For instance, in much of Europe, commas are used as decimal points. In these instances, values are typically separated by semicolons (;), not commas (,). `read.csv2()` solves this for us, as it uses semicolons as separators, rather than commas, and interprets commas as decimal points. For tab-delimited data, `read.delim()` and `read_delim2()` serve the same purpose.
+
+Dalam `{tidyverse}`, ada package yang dirancang untuk membaca data sederhana yang dipisahkan oleh pembatas, yaitu `{readr}`. `{readr}` mendukung format file berikut dengan fungsi-fungsi `read_*()` ini:
+
+> In the {tidyverse}, there is package designed to read in simple delimited data, {readr}. {readr} supports the following file formats with these read_*() functions:
+
+`read_csv()`   : nilai yang dipisahkan koma, atau CSV  
+`read_tsv()`   : nilai yang dipisahkan tab, atau TSV  
+`read_csv2()`  : nilai yang dipisahkan titik koma dengan koma sebagai tanda desimal  
+`read_delim()` : file dengan pembatas; CSV dan TSV adalah kasus khusus yang penting  
+`read_fwf()`   : file dengan lebar kolom tetap  
+`read_table()` : file yang dipisahkan oleh spasi kosong  
+`read_log()`   : file log web
+
+> `read_csv()`   : comma-separated values (CSV)
+> `read_tsv()`   : tab-separated values (TSV)
+> `read_csv2()`  : semicolon-separated values with , as the decimal mark
+> `read_delim()` : delimited files (CSV and TSV are important special cases)
+> `read_fwf()`   : fixed-width files
+> `read_table()` : whitespace-separated files
+> `read_log()`   : web log files
+
+Kita membaca dataset dengan koma lagi, kali ini menggunakan `{readr}`, yang sudah termasuk dalam package besar `{tidyverse}`.
+
+> We read in the commas data set again, this time using {readr}, which comes included in the omnibus {tidyverse} package.
+
+```{r}
+
+#install.packages("tidyverse")
+library(tidyverse)
+APES <- read_csv("googleapes.csv")
+APES
+
+```
+
+Anda akan melihat bahwa tampilan datanya berbeda dibandingkan saat kita memasukkan data menggunakan `read.csv()`. Kita bisa memastikan bahwa keduanya tidak persis sama sebagai objek R, dan bahwa keduanya memiliki struktur serta tampilan yang sedikit berbeda, walaupun keduanya membaca data yang sama.
+
+> You see that the data looks different than when we pulled the data in using `read.csv()`. We can confirm that it is not the same, and that the two have slightly different structures and appearances (although they both read in the same data).
+
+```{r}
+
+identical(apes, COMMAS)
+
+str(apes)     # look at structure
+str(APES)
+
+dim(apes)     # look at dimensions
+dim(APES)
+
+head(apes)    # see first few lines
+head(APES)
+
+```
+
+`COMMAS` adalah sebuah “tibble”, yaitu versi tabel data dari `{tidyverse}`. Kita akan melihatnya lebih lanjut sebentar lagi.
+
+> 'COMMAS' is a "tibble", the {tidyverse}'s version of a data table. We'll look at it more in a bit.
+
+## .xls / .xlsx / .xls / .xlsx
+
+Excel sangat berguna untuk banyak hal. Namun, menyimpan data dalam format yang sederhana dan andal bukanlah salah satu keunggulannya. Meskipun begitu, file Excel sangat umum digunakan, jadi kita perlu tahu cara mengimpor data dari file tersebut. Membaca spreadsheet Excel ke dalam R dimungkinkan oleh package `{readxl}`. Ini bukan package inti `{tidyverse}`, jadi kita perlu memuat package tersebut terlebih dahulu. Seharusnya package ini sudah terinstal, jadi baris instalasinya saya jadikan komentar. Kita memuat package tersebut:
+
+> Excel is great for lots of things. Storing data in a simple, reliable format is not one of them. Still, excel files are ubiquitous, so we should know how to import data from them. Reading spreadsheets from Excel into R is made possible thanks to the {readxl} package. This is not a core {tidyverse} package, so we need to load the package first (it should be installed already, so I have commented out the installation line). We load the package:
+
+```{r}
+
+#install.packages("readxl")
+library(readxl)
+
+```
+
+lalu membaca data menggunakan perintah `read_excel()`:
+
+> and read in data using the `read_excel()` command:
+
+```{r}
+
+os <- read_excel("office_supplies_orders.xlsx")
+os
+
+```
+
+Saya mengunduh dataset pesanan perlengkapan kantor ini dari sumber berikut pada 2026-01-26:
+
+> I downloaded this data set on office supplies orders from (2026-01-26):
+
+<https://www.contextures.com/xlsampledata01.html#data>
+
+> https://www.contextures.com/xlsampledata01.html#data
+
+Perhatikan bahwa di atas, seperti pada file `.csv`, kita tidak perlu menuliskan path file lengkap, cukup nama file saja, karena file tersebut berada di working directory. Secara default, ini adalah direktori yang sama dengan project.
+
+> Note that above (as with the .csv file) we didn't have to list a full file path, just the file name, because the file is in the working directory (by default, the same directory as the project)
+
+`os` sekarang adalah sebuah objek R, dan kita bisa memperlakukannya seperti objek lain di R. Misalnya:
+
+> 'os' is now an R object, and we can treat it as any other in R. e.g., 
+
+```{r}
+
+str(os)  # show structure
+dim(os)  # show dimensions
+os$Rep   # select columns
+os[1,2]  # select cell [row, column]
+os[1,]   # select row, all columns for that row
+os[, 7]   # select column, all rows for that column
+
+```
+
+Alat lain yang sangat dasar dan sangat berguna adalah `table()`. Fungsi ini menunjukkan jumlah kemunculan setiap nilai unik dalam sebuah vektor.
+
+> Another very basic and really useful tool is `table()`. It shows the number of occurrences of each unique value in a vector.
+
+```{r}
+
+os$Rep
+table(os$Rep)  
+os$Item
+table(os$Item)  
+
+```
+
+Anda juga bisa membuat tabel berdasarkan dua variabel sekaligus. Argument pertama menjadi baris tabel, dan argument kedua menjadi kolom tabel.
+
+> You can table by two variables at once, too. The first argument are the table rows, the second the table columns
+
+```{r}
+
+table(os$Rep, os$Item)  
+
+```
+
+
+
+
+## Google Sheets / google sheets
+
+Package `{googlesheets4}` memungkinkan kita memanfaatkan Google Sheets Application Programming Interface, atau API. Secara umum, API memungkinkan berbagai aplikasi berkomunikasi satu sama lain. Dalam kasus ini, Google telah merilis API yang memungkinkan perangkat lunak lain berkomunikasi dengan Google Sheets dan mengambil data serta informasi langsung dari Google Sheets. Package `{googlesheets4}` adalah cara paling mudah untuk mengakses Google Sheets API dan mengambil data Google Sheets Anda.
+
+> The {googlesheets4} package allows us to take advantage of the Google Sheets Application Programming Interface (API). Very generally, APIs allow different applications to communicate with one another. In this case, Google has released an API that allows other software to communicate with Google Sheets and retrieve data and information directly from Google Sheets. The {googlesheets4} package is the easiest way to access the Google Sheets API and retrieve your Google Sheets data.
+
+Pendekatan dasarnya adalah:
+
+> The basic approach is:
+
+```{r}
+
+#install.packages("googlesheets4")
+library(googlesheets4)
+
+file_name <- read_sheet("google sheet URL")
+
+```
+
+Karena Anda mengakses data langsung dari sheet, Anda memerlukan akses ke akun tempat sheet tersebut berada. Ini membutuhkan proses autentikasi tambahan. Prosesnya cukup sederhana, dan setelah selesai, Anda dapat menampilkan semua Google worksheet Anda sekaligus menggunakan `gs4_find()`.
+
+> Because you are accessing the data directly from the sheet, you need access to the account to which the sheet belongs. This requires some additional authentication. The process is pretty simple, and once completed allows you to list all of your Google worksheets a once using `gs4_find()`
+
+Jika Anda ingin mengetahui lebih lanjut tentang hal ini, silakan lihat:
+
+> If you'd like to know more about this, please see:
+
+<https://googlesheets4.tidyverse.org> atau  
+<https://jhudatascience.org/tidyversecourse/get-data.html#google-sheets>
+
+> https://googlesheets4.tidyverse.org or
+> https://jhudatascience.org/tidyversecourse/get-data.html#google-sheets
+
+Perhatikan bahwa ada package terkait yang memungkinkan Anda mengakses data langsung dari Google Drive, tetapi dalam format yang lebih beragam: `googledrive()`.
+
+> Note there is a related package that allows you to access data directly from Google Drive, but in a wider variety of formats: `googledrive()`.
+
+
+
+------ informasi tambahan / additional information -------------
+
+
+
+## file rda / rda files
+
+File RDA, atau “R Data”, adalah salah satu dari dua format data biner di R. Atribut utamanya adalah:
+
+> RDA ("R Data") files are one of R's two binary data formats. Their key attributes are:
+
+- ekstensi file biasanya: `.rda`, `.Rda`, atau `.RData`
+- dapat menyimpan satu atau beberapa objek R yang berbeda
+- mempertahankan nama objek yang disimpan
+
+> - file extension (typically): .rda, .Rda, or .RData
+> - can take up one or multiple different R objects
+> - preserves the name(s) of the object(s) stored
+
+Perintah sederhana untuk bekerja dengan file ini adalah:
+
+> Simple commands to work with them are:
+
+`load()`: membaca/memuat file yang sudah ada  
+`save()`: menulis/menyimpan data
+
+> `load()`: read/load existing files
+> `save()`: write/save data
+
+Di sini kita memuat sebuah file dari file `.rda`, pertama-tama dengan memastikan bahwa objeknya belum ada sebelumnya, lalu memastikan bahwa objek tersebut ada setelah dimuat.
+
+> Here we load a file in from an *.rda file, first confirming it is not there before and is afterwards.
+
+```{r}
+
+ls()    # list the objects in environment
+load(file = "trees.rda")
+ls()    # data are now there
+
+```
+
+Saya membuat file data ini dari dataset `trees` yang sudah tersedia di R. Lihat `?trees()` untuk sitasinya.
+
+> I made this data file from the 'trees' data set that is built into R. See `?trees()` for the citation.
+
+Anda bisa melihat atribut utama dari file `.rda`:
+
+> You see the key attributes of an *.rda file:
+
+- nama dipertahankan: `load()` membuat objek dengan nama tertentu, yaitu nama objek yang awalnya disimpan dalam file RDA
+- file ini dapat berisi beberapa objek R
+
+> - names are preserved: `load()` creates objects with specific names, the names of the objects originally stored in the RDA file
+> - it can contain multiple R objects
+
+Sekarang kita bisa menggunakan data ini seperti biasa:
+
+> We can now use these data per usual:
+
+```{r}
+
+girth
+2 * girth
+
+```
+
+Terakhir, kita menghapusnya dari environment menggunakan `rm()`:
+
+> Finally, we remove it from the environment using `rm()`:
+
+```{r}
+
+rm(girth, height, volume)
+ls()
+
+```
+
+Kita akan membuat file RDA baru berdasarkan dataset bawaan R, yaitu `cars`, lalu menyimpannya dan memastikan file tersebut ada.
+
+> We'll make a new RDA file, based on R's built in 'cars' data set, then save it, and confirm it is there.
+
+```{r}
+
+head(cars)             # show data set (not required)
+SPEED <- cars$speed    # make a new object
+DIST  <- cars$speed    # make another new object
+
+save(SPEED, DIST, file = "CARS.rda")  #save file
+list.files()           # confirm it is there
+
+```
+
+Kita menghapus semua objek dari environment menggunakan `rm(list = ls())`. Perhatikan, ini tidak menghapus file!
+
+> We remove all files from the environment using `rm(list = ls())`. Note, this does not delete the files!
+
+```{r}
+
+ls()
+rm(list = ls())
+ls()
+
+```
+
+
+## file rds / rds files
+
+File RDS, atau “serialized R data”, adalah format data biner R yang kedua. Atribut utamanya adalah:
+
+> RDS ("serialized R data") files are the other of R's two binary data formats. Their key attributes are:
+
+- ekstensi file biasanya `.rds` atau `.Rds`
+- hanya untuk satu objek
+- tidak mempertahankan nama objek yang disimpan
+
+> - file extension (typically) .rds, or .Rds.
+> - for only one single object
+> - does not preserve the name of the object saved.
+
+`readRDS()`: membaca/memuat file yang sudah ada  
+`saveRDS()`: menulis/menyimpan data
+
+> `readRDS()`: read/load existing files
+> `saveRDS()`: write/save data
+
+Saat membaca file `.rds`, ada satu perbedaan penting dibandingkan dengan `load()` yang kita gunakan di atas untuk file RDA. Saat memanggil `readRDS()`, objek yang dimuat dari file RDS dikembalikan setelah file biner dibaca. Jadi, kita perlu menetapkan hasilnya ke sebuah objek menggunakan `<-`. Jika tidak, objek akan dicetak tetapi tidak disimpan, sehingga Anda tidak bisa menggunakannya setelah itu.
+
+> When reading in *.rds files there is one important difference from `load()` that we used above for RDA files. When calling `readRDS()` the object loaded from the RDS file is returned after reading the binary file. Thus, we need to assign (<-) the return to an object. If not, the object will be printed but not stored, wherefore you can’t use it afterwards
+
+```{r}
+
+# first, read in data
+readRDS("earthquakes.rds")
+
+# and show it is not stored
+ls()
+
+# read in data and assign it to an object
+QUAKES <- readRDS("earthquakes.rds")
+
+# now it is there
+ls()
+
+```
+
+Saya membuat file data ini dari dataset `quakes` yang sudah tersedia di R. Lihat `?quakes()` untuk sitasinya.
+
+> I made this data file from the 'quakes' data set that is built into R. See `?quakes()` for the citation.
+
+Seperti di atas, sekarang kita bisa menggunakan objek baru ini seperti objek lain di R.
+
+> As above, we can now use our new object as with any other
+
+```{r}
+
+str(QUAKES)
+tail(QUAKES)
+ncol(QUAKES)
+QUAKES$mag
+hist(QUAKES$depth)
+
+```
+
+Kita dapat membuat file dengan mudah, tetapi sekarang menggunakan fungsi `saveRDS()`. Kita menggunakan dataset bawaan `mtcars`:
+
+> We can create files easily, but now using the `saveRDS()` function. We use the built in data set 'mtcars':
+
+```{r}
+
+head(mtcars)
+saveRDS(mtcars, "MTCARS.rds")
+
+```
+
+Seperti biasa, kita bisa melihat file tersebut di tab Files. Di sini kita memuatnya kembali, menyimpannya sebagai objek `z`, lalu membandingkannya dengan dataset asli:
+
+> As usual, we can see it in the Files tab. Here we pull it back in, save it as object z, and compare it to the original data set:
+
+```{r}
+
+z <- readRDS("MTCARS.rds")
+identical(mtcars, z)
+table(mtcars == z)
+
+```
+
+lalu menghapusnya:
+
+> and remove it:
+
+```{r}
+
+file.remove("MTCARS.rds")
+list.files()
+
+```
+
+Perhatikan bahwa, tidak seperti `rm(list = ls())`, `file.remove()` benar-benar menghapus file dari direktori project.
+
+> Note that, unlike `rm(list = ls())`, `file.remove()` does delete files from the project directory.
+
+
+## giliran Anda / your turn
+
+1. Buat objek `x1` yang berisi 1000 angka yang diambil dari distribusi normal, dengan rata-rata 5 dan sd 2. Perlu bantuan? Ketik `?rnorm`.
+
+> 1. Make an object 'x1' containing 1000 numbers drawn from a normal distribution, with a mean of 5 and sd of 2. (need help?, type "?rnorm")
+
+2. Buat objek lain, `x2`, dengan 1000 angka acak lain dari distribusi normal, kali ini dengan rata-rata 4 dan sd 4.
+
+> 2. Make another object, 'x2', with another 1000 random numbers from the normal distribution, this time with a mean of 4 and sd of 4.
+
+3. Gabungkan `x1` dan `x2` menjadi satu *matrix*, bukan satu *vector*, yang bernama `my_num`. Periksa dimensinya.
+
+> 3. Combine x1 and x2 into a single *matrix* (not a single *vector*), called 'my_num'. Check its dimensions.
+
+4. Simpan `my_num` sebagai file CSV. Saya belum mengajarkan cara melakukan ini. Coba gunakan `write.csv()`. Perlu bantuan? `?write.csv`.
+
+> 4. Save 'my_num' as a csv file. I haven't taught you how to do this. Try `write.csv()`. Need help? `?write.csv`
+
+5. Simpan `my_num` sebagai file RDA.
+
+> 5. Save 'my_num' as an rda file
+
+
+```{r}
+
+
+
+```
+
+Contoh jawaban ada di bawah, tetapi cobalah kerjakan sendiri dulu — itulah satu-satunya cara untuk benar-benar belajar!
+
+> A sample answer is below, but work through this on your own - it is the only way to truly learn!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+
+# 1. Make an object 'x1' containing 1000 numbers drawn from a normal distribution, with a mean of 5 and sd of 2.
+
+x1 <- rnorm(1000, 
+            mean =  5, 
+            sd = 2)
+
+# 2. Make another object, 'x2', with another 1000 random numbers from the normal distribution, this time with a mean of 4 and sd of 4.
+
+x2 <- rnorm(1000, 
+            mean = 4, 
+            sd = 4)
+
+# 3. Combine x1 and x2 into a single *matrix* (not a single *vector*), called 'my_num'. Check its dimensions.
+
+my_num <- cbind(x1, x2)
+dim(my_num)
+
+# 4. Save 'my_num' as a csv file. I haven't taught you how to do this. Try `write.csv()`. Need help? `?write.csv`
+
+write.csv(my_num, "my_num.csv")
+
+# 5. Save 'my_num' as an rda file
+
+save(my_num, 
+     file = "my_num.rda")
+
+```

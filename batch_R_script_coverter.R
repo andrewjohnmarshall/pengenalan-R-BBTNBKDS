@@ -11,7 +11,7 @@
 library(knitr)
 
 # define repo root
-root <- 'pengenalan-R-BBTNBKDS\'  
+root <- '/Users/ajmarsha/Dropbox (Personal)/andy/teaching/R courses/2026 BBTNBKDS R course/pengenalan-R-BBTNBKDS'  
 
 # pull list of all .rmd files
 rmd_files <- list.files(
